@@ -1,13 +1,13 @@
 diff --git a/ui/build/dumpvars.go b/ui/build/dumpvars.go
-index 5a104480a..18ca15966 100644
+index 1150ce5b6..27b89dc3f 100644
 --- a/ui/build/dumpvars.go
 +++ b/ui/build/dumpvars.go
-@@ -139,7 +139,7 @@ func dumpMakeVars(ctx Context, config Config, goals, vars []string, write_soong_
+@@ -147,7 +147,7 @@ func dumpMakeVars(ctx Context, config Config, goals, vars []string, write_soong_
  var BannerVars = []string{
  	"PLATFORM_VERSION_CODENAME",
  	"PLATFORM_VERSION",
 -	"CR_VERSION",
 +	"FLOKO_VERSION",
  	"PRODUCT_INCLUDE_TAGS",
+ 	"PRODUCT_SOURCE_ROOT_DIRS",
  	"TARGET_DEVICE",
- 	"TARGET_BUILD_VARIANT",

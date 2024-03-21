@@ -1,8 +1,8 @@
 diff --git a/AndroidManifest.xml b/AndroidManifest.xml
-index a4dbfaa..a322962 100644
+index cdcbe02..9a2aa99 100644
 --- a/AndroidManifest.xml
 +++ b/AndroidManifest.xml
-@@ -257,7 +257,7 @@
+@@ -269,7 +269,7 @@
                  android:resource="@string/summary_empty" />
          </activity-alias> -->
  
@@ -11,7 +11,7 @@ index a4dbfaa..a322962 100644
          <receiver
              android:name=".lineagestats.ReportingServiceManager"
              android:enabled="true"
-@@ -267,7 +267,7 @@
+@@ -279,7 +279,7 @@
                  <action android:name="android.intent.action.BOOT_COMPLETED" />
                  <action android:name="org.lineageos.lineageparts.action.TRIGGER_REPORT_METRICS" />
              </intent-filter>
@@ -22,13 +22,13 @@ index a4dbfaa..a322962 100644
              android:name=".lineagestats.ReportingService"
 diff --git a/res/drawable/ic_counter.xml b/res/drawable/ic_counter.xml
 deleted file mode 100644
-index fd8f0b5..0000000
+index 63c33df..0000000
 --- a/res/drawable/ic_counter.xml
 +++ /dev/null
 @@ -1,27 +0,0 @@
 -<?xml version="1.0" encoding="utf-8"?>
 -<!--
--     Copyright (C) 2017-2022 crDroid Android Project
+-     Copyright (C) 2017-2024 crDroid Android Project
 -
 -     Licensed under the Apache License, Version 2.0 (the "License");
 -     you may not use this file except in compliance with the License.
@@ -54,10 +54,10 @@ index fd8f0b5..0000000
 -        android:pathData="M4,4H20A2,2 0 0,1 22,6V18A2,2 0 0,1 20,20H4A2,2 0 0,1 2,18V6A2,2 0 0,1 4,4M4,6V18H11V6H4M20,18V6H18.76C19,6.54 18.95,7.07 18.95,7.13C18.88,7.8 18.41,8.5 18.24,8.75L15.91,11.3L19.23,11.28L19.24,12.5L14.04,12.47L14,11.47C14,11.47 17.05,8.24 17.2,7.95C17.34,7.67 17.91,6 16.5,6C15.27,6.05 15.41,7.3 15.41,7.3L13.87,7.31C13.87,7.31 13.88,6.65 14.25,6H13V18H15.58L15.57,17.14L16.54,17.13C16.54,17.13 17.45,16.97 17.46,16.08C17.5,15.08 16.65,15.08 16.5,15.08C16.37,15.08 15.43,15.13 15.43,15.95H13.91C13.91,15.95 13.95,13.89 16.5,13.89C19.1,13.89 18.96,15.91 18.96,15.91C18.96,15.91 19,17.16 17.85,17.63L18.37,18H20M8.92,16H7.42V10.2L5.62,10.76V9.53L8.76,8.41H8.92V16Z" />
 -</vector>
 diff --git a/res/values/config.xml b/res/values/config.xml
-index 6daf34a..a3ee437 100644
+index 1923077..adfcaa4 100644
 --- a/res/values/config.xml
 +++ b/res/values/config.xml
-@@ -18,7 +18,7 @@
+@@ -7,7 +7,7 @@
  <resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
  
      <!-- Metrics server endpoint -->
@@ -67,10 +67,10 @@ index 6daf34a..a3ee437 100644
      <!-- Default action ids for a device's touchscreen gestures
           The array should be sorted in the same order as the
 diff --git a/res/xml/anonymous_stats.xml b/res/xml/anonymous_stats.xml
-index 04d576c..b0b8668 100644
+index 898bc74..d19b4ff 100644
 --- a/res/xml/anonymous_stats.xml
 +++ b/res/xml/anonymous_stats.xml
-@@ -25,7 +25,7 @@
+@@ -14,7 +14,7 @@
              android:key="stats_collection"
              android:title="@string/stats_collection_title"
              android:summary="@string/stats_collection_summary"
@@ -80,10 +80,10 @@ index 04d576c..b0b8668 100644
      <Preference
          android:title="@string/preview_data_title"
 diff --git a/res/xml/parts_catalog.xml b/res/xml/parts_catalog.xml
-index ad6781f..1070cb1 100644
+index 29dd2c4..0669f21 100644
 --- a/res/xml/parts_catalog.xml
 +++ b/res/xml/parts_catalog.xml
-@@ -75,10 +75,10 @@
+@@ -64,10 +64,10 @@
            android:fragment="org.lineageos.lineageparts.statusbar.StatusBarSettings"
            lineage:xmlRes="@xml/status_bar_settings" />-->
  
@@ -97,10 +97,10 @@ index ad6781f..1070cb1 100644
      <!--<part android:key="power_menu"
            android:title="@string/power_menu_title"
 diff --git a/res/xml/trust_preferences.xml b/res/xml/trust_preferences.xml
-index ba60ebb..4adbe61 100644
+index fe228a6..4a31dc3 100644
 --- a/res/xml/trust_preferences.xml
 +++ b/res/xml/trust_preferences.xml
-@@ -48,10 +48,6 @@
+@@ -37,10 +37,6 @@
              android:entryValues="@array/trust_restrict_usb_values"
              android:defaultValue="0" />
  
@@ -112,10 +112,10 @@ index ba60ebb..4adbe61 100644
              android:key="sms_security_check_limit"
              android:icon="@drawable/ic_message_alert"
 diff --git a/src/org/lineageos/lineageparts/lineagestats/AnonymousStats.java b/src/org/lineageos/lineageparts/lineagestats/AnonymousStats.java
-index cdb1eef..114872f 100644
+index 6a4bac0..f120718 100644
 --- a/src/org/lineageos/lineageparts/lineagestats/AnonymousStats.java
 +++ b/src/org/lineageos/lineageparts/lineagestats/AnonymousStats.java
-@@ -17,32 +17,22 @@
+@@ -6,32 +6,22 @@
  
  package org.lineageos.lineageparts.lineagestats;
  
@@ -149,7 +149,7 @@ index cdb1eef..114872f 100644
      public static SharedPreferences getPreferences(Context context) {
          return context.getSharedPreferences(PREF_FILE_NAME, 0);
      }
-@@ -51,35 +41,6 @@ public class AnonymousStats extends SettingsPreferenceFragment {
+@@ -40,35 +30,6 @@ public class AnonymousStats extends SettingsPreferenceFragment {
      public void onCreate(Bundle savedInstanceState) {
          super.onCreate(savedInstanceState);
          addPreferencesFromResource(R.xml.anonymous_stats);
@@ -186,10 +186,10 @@ index cdb1eef..114872f 100644
  
      public static void updateLastSynced(Context context) {
 diff --git a/src/org/lineageos/lineageparts/lineagestats/ReportingService.java b/src/org/lineageos/lineageparts/lineagestats/ReportingService.java
-index 793a6b8..44279b3 100644
+index 565b421..7455b50 100644
 --- a/src/org/lineageos/lineageparts/lineagestats/ReportingService.java
 +++ b/src/org/lineageos/lineageparts/lineagestats/ReportingService.java
-@@ -27,7 +27,7 @@ import android.os.PersistableBundle;
+@@ -16,7 +16,7 @@ import android.os.PersistableBundle;
  import android.util.Log;
  
  public class ReportingService extends IntentService {
@@ -198,7 +198,7 @@ index 793a6b8..44279b3 100644
      private static final boolean DEBUG = Log.isLoggable(TAG, Log.DEBUG);
  
      public ReportingService() {
-@@ -42,46 +42,40 @@ public class ReportingService extends IntentService {
+@@ -31,46 +31,40 @@ public class ReportingService extends IntentService {
  
          String deviceId = Utilities.getUniqueID(context);
          String deviceName = Utilities.getDevice();
@@ -264,10 +264,10 @@ index 793a6b8..44279b3 100644
          // reschedule
          AnonymousStats.updateLastSynced(this);
 diff --git a/src/org/lineageos/lineageparts/lineagestats/ReportingServiceManager.java b/src/org/lineageos/lineageparts/lineagestats/ReportingServiceManager.java
-index 1363554..6faeb89 100644
+index 1c46748..5698953 100644
 --- a/src/org/lineageos/lineageparts/lineagestats/ReportingServiceManager.java
 +++ b/src/org/lineageos/lineageparts/lineagestats/ReportingServiceManager.java
-@@ -31,7 +31,7 @@ public class ReportingServiceManager extends BroadcastReceiver {
+@@ -20,7 +20,7 @@ public class ReportingServiceManager extends BroadcastReceiver {
      private static final long MILLIS_PER_DAY = 24L * MILLIS_PER_HOUR;
      private static final long UPDATE_INTERVAL = 1L * MILLIS_PER_DAY;
  
@@ -277,7 +277,7 @@ index 1363554..6faeb89 100644
      public static final String ACTION_LAUNCH_SERVICE =
              "org.lineageos.lineageparts.action.TRIGGER_REPORT_METRICS";
 diff --git a/src/org/lineageos/lineageparts/lineagestats/StatsUploadJobService.java b/src/org/lineageos/lineageparts/lineagestats/StatsUploadJobService.java
-index 02e20f5..e19c2e5 100644
+index 066ec4c..75ec4ba 100644
 --- a/src/org/lineageos/lineageparts/lineagestats/StatsUploadJobService.java
 +++ b/src/org/lineageos/lineageparts/lineagestats/StatsUploadJobService.java
 @@ -34,18 +34,15 @@ import java.util.concurrent.Executors;
@@ -315,24 +315,24 @@ index 02e20f5..e19c2e5 100644
                  String deviceCountry = extras.getString(KEY_COUNTRY);
                  String deviceCarrier = extras.getString(KEY_CARRIER);
                  String deviceCarrierId = extras.getString(KEY_CARRIER_ID);
-@@ -115,12 +109,12 @@ public class StatsUploadJobService extends JobService {
+@@ -115,13 +109,12 @@ public class StatsUploadJobService extends JobService {
                  int jobType = extras.getInt(KEY_JOB_TYPE, -1);
                  if (!mCancelled) {
                      switch (jobType) {
 -                        case JOB_TYPE_CRDROID:
-+                        case JOB_TYPE_LINEAGEORG:
++                        case JOB_TYPE_LINEAGE:
                              try {
                                  JSONObject json = buildStatsRequest(deviceId, deviceName,
 -                                        deviceCrVersion, deviceBuildDate, deviceAndroidVersion,
--                                        deviceTag, deviceCountry, deviceCarrier, deviceCarrierId);
+-                                        deviceTag, deviceCountry, deviceCarrier,
++                                		 deviceVersion, deviceCountry, deviceCarrier,
+                                         deviceCarrierId);
 -                                success = uploadToCrdroid(json);
-+                                        deviceVersion, deviceCountry, deviceCarrier,
-+                                        deviceCarrierId);
 +                                success = uploadToLineage(json);
                              } catch (IOException | JSONException e) {
                                  Log.e(TAG, "Could not upload stats checkin to community server", e);
                              }
-@@ -146,25 +140,21 @@ public class StatsUploadJobService extends JobService {
+@@ -147,25 +140,21 @@ public class StatsUploadJobService extends JobService {
          }
      }
  
@@ -362,7 +362,7 @@ index 02e20f5..e19c2e5 100644
          URL url = new URL(uri.toString());
          HttpURLConnection urlConnection = (HttpURLConnection) url.openConnection();
          try {
-@@ -174,12 +164,11 @@ public class StatsUploadJobService extends JobService {
+@@ -175,12 +164,11 @@ public class StatsUploadJobService extends JobService {
              urlConnection.setRequestProperty("Content-Type", "application/json; charset=UTF-8");
  
              OutputStream os = urlConnection.getOutputStream();
@@ -377,10 +377,10 @@ index 02e20f5..e19c2e5 100644
              if (!success) {
                  Log.w(TAG, "failed sending, server returned: " + getResponse(urlConnection));
 diff --git a/src/org/lineageos/lineageparts/lineagestats/Utilities.java b/src/org/lineageos/lineageparts/lineagestats/Utilities.java
-index 85d1a5f..6d06079 100644
+index 3115739..1a61ecb 100644
 --- a/src/org/lineageos/lineageparts/lineagestats/Utilities.java
 +++ b/src/org/lineageos/lineageparts/lineagestats/Utilities.java
-@@ -82,19 +82,6 @@ public class Utilities {
+@@ -71,19 +71,6 @@ public class Utilities {
          return SystemProperties.get("ro.modversion", Build.DISPLAY);
      }
  
@@ -400,7 +400,7 @@ index 85d1a5f..6d06079 100644
      public static String digest(String input) {
          try {
              MessageDigest md = MessageDigest.getInstance("SHA-256");
-@@ -109,8 +96,9 @@ public class Utilities {
+@@ -98,8 +85,9 @@ public class Utilities {
       * @return Whether or not stats collection is enabled.
       */
      public static boolean isStatsCollectionEnabled(Context context) {
@@ -412,7 +412,7 @@ index 85d1a5f..6d06079 100644
      }
  
      /**
-@@ -118,9 +106,8 @@ public class Utilities {
+@@ -107,9 +95,8 @@ public class Utilities {
       * @param enabled Boolean that sets collection being enabled.
       */
      public static void setStatsCollectionEnabled(Context context, boolean enabled) {

@@ -1251,10 +1251,10 @@ z8+VSn;%a%2TvX;F%mV^}1cH#3L9R|gZb~izZom&nR$At!g!FX@8EG>aS*7c8N^;kM
 nze>{5xAP&d{ttnVpR1Sq<Nu$)aOf2iKmgK38Y1d69HajS#e(J@
 
 diff --git a/res/layout/setup_lineage_settings.xml b/res/layout/setup_lineage_settings.xml
-index 5d206e4..467c03a 100644
+index 6c99b30..f65fc72 100644
 --- a/res/layout/setup_lineage_settings.xml
 +++ b/res/layout/setup_lineage_settings.xml
-@@ -46,6 +46,7 @@
+@@ -34,6 +34,7 @@
                      android:layout_height="match_parent">
  
                      <!-- Whether or not to enable metrics -->
@@ -1262,7 +1262,7 @@ index 5d206e4..467c03a 100644
                      <LinearLayout
                          android:id="@+id/metrics"
                          android:orientation="horizontal"
-@@ -73,6 +74,7 @@
+@@ -61,6 +62,7 @@
                              style="@style/SudCheckBox.Multiline" />
  
                      </LinearLayout>
@@ -1271,10 +1271,10 @@ index 5d206e4..467c03a 100644
                      <!-- Checkbox for using on-screen nav keys -->
                      <LinearLayout
 diff --git a/res/values/strings.xml b/res/values/strings.xml
-index 508712e..056c13c 100644
+index 7a64507..e2c08e3 100644
 --- a/res/values/strings.xml
 +++ b/res/values/strings.xml
-@@ -68,7 +68,7 @@
+@@ -63,7 +63,7 @@
      <string name="setup_services">crDroid features</string>
      <string name="services_pp_explanation">These services work for you to extend the capabilities of your device. Data will be used in accordance with <xliff:g id="name" example="crDroid">%1$s</xliff:g>\'s privacy policy.</string>
      <string name="services_find_privacy_policy">You can read the privacy policy on another device by visiting <xliff:g id="uri" example="https://lineageos.org/legal">%1$s</xliff:g></string>
@@ -1284,18 +1284,18 @@ index 508712e..056c13c 100644
      <string name="services_metrics_label"><xliff:g id="name" example="Help improve crDroid">%1$s</xliff:g> by automatically sending diagnostic and usage data to <xliff:g id="name" example="crDroid">%2$s</xliff:g>. This information can’t be used to identify you and lends a hand to teams working on things like battery life, app performance, and new <xliff:g id="name" example="crDroid">%3$s</xliff:g> features.</string>
      <string name="services_os_nav_keys_label"><b>Use on screen navigation keys</b> instead of hardware keys.</string>
 diff --git a/src/org/lineageos/setupwizard/LineageSettingsActivity.java b/src/org/lineageos/setupwizard/LineageSettingsActivity.java
-index 9d1055c..d0c3aca 100644
+index 974bd15..0632e32 100644
 --- a/src/org/lineageos/setupwizard/LineageSettingsActivity.java
 +++ b/src/org/lineageos/setupwizard/LineageSettingsActivity.java
-@@ -18,7 +18,6 @@
+@@ -7,7 +7,6 @@
  package org.lineageos.setupwizard;
  
  import static org.lineageos.setupwizard.SetupWizardApp.DISABLE_NAV_KEYS;
 -import static org.lineageos.setupwizard.SetupWizardApp.KEY_SEND_METRICS;
  
- import android.app.Activity;
  import android.content.Context;
-@@ -48,17 +47,10 @@ public class LineageSettingsActivity extends BaseSetupWizardActivity {
+ import android.os.Bundle;
+@@ -25,17 +24,10 @@ public class LineageSettingsActivity extends BaseSetupWizardActivity {
  
      private SetupWizardApp mSetupWizardApp;
  
@@ -1313,7 +1313,7 @@ index 9d1055c..d0c3aca 100644
      private final View.OnClickListener mNavKeysClickListener = view -> {
          boolean checked = !mNavKeys.isChecked();
          mNavKeys.setChecked(checked);
-@@ -79,20 +71,6 @@ public class LineageSettingsActivity extends BaseSetupWizardActivity {
+@@ -56,20 +48,6 @@ public class LineageSettingsActivity extends BaseSetupWizardActivity {
                  privacyPolicy, policySummary);
          getGlifLayout().setDescriptionText(servicesFullDescription);
  
@@ -1327,14 +1327,14 @@ index 9d1055c..d0c3aca 100644
 -        final SpannableStringBuilder metricsSpan = new SpannableStringBuilder(metricsSummary);
 -        metricsSpan.setSpan(new android.text.style.StyleSpan(android.graphics.Typeface.BOLD),
 -                0, metricsHelpImproveLineage.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
--        TextView metrics = (TextView) findViewById(R.id.enable_metrics_summary);
+-        TextView metrics = findViewById(R.id.enable_metrics_summary);
 -        metrics.setText(metricsSpan);
--        mMetrics = (CheckBox) findViewById(R.id.enable_metrics_checkbox);
+-        mMetrics = findViewById(R.id.enable_metrics_checkbox);
 -
          View navKeysRow = findViewById(R.id.nav_keys);
          navKeysRow.setOnClickListener(mNavKeysClickListener);
-         mNavKeys = (CheckBox) findViewById(R.id.nav_keys_checkbox);
-@@ -109,7 +87,6 @@ public class LineageSettingsActivity extends BaseSetupWizardActivity {
+         mNavKeys = findViewById(R.id.nav_keys_checkbox);
+@@ -86,7 +64,6 @@ public class LineageSettingsActivity extends BaseSetupWizardActivity {
      public void onResume() {
          super.onResume();
          updateDisableNavkeysOption();
@@ -1342,7 +1342,7 @@ index 9d1055c..d0c3aca 100644
      }
  
      @Override
-@@ -133,15 +110,6 @@ public class LineageSettingsActivity extends BaseSetupWizardActivity {
+@@ -104,15 +81,6 @@ public class LineageSettingsActivity extends BaseSetupWizardActivity {
          return R.drawable.ic_features;
      }
  
@@ -1359,7 +1359,7 @@ index 9d1055c..d0c3aca 100644
          if (mSupportsKeyDisabler) {
              final Bundle myPageBundle = mSetupWizardApp.getSettingsBundle();
 diff --git a/src/org/lineageos/setupwizard/util/SetupWizardUtils.java b/src/org/lineageos/setupwizard/util/SetupWizardUtils.java
-index b3d49fd..591f3b8 100644
+index dd4115d..1823248 100644
 --- a/src/org/lineageos/setupwizard/util/SetupWizardUtils.java
 +++ b/src/org/lineageos/setupwizard/util/SetupWizardUtils.java
 @@ -71,7 +71,7 @@ public class SetupWizardUtils {
