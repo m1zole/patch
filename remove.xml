@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <manifest>
-  <remove-project name="crdroidandroid/android_external_faceunlock" />
-  <remove-project name="crdroidandroid/android_packages_apps_FaceUnlockService" />
+  <remove-project name="crdroidandroid/android_packages_apps_FaceUnlock" />
   <remove-project name="crdroidandroid/android_packages_apps_Updater" />
   <remove-project name="crdroidandroid/android_vendor_crDroidOTA" />
 </manifest>

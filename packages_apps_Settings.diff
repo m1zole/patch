@@ -1475,17 +1475,4 @@ index 1e6116e5b3..ae0797e7a4 100644
 +        android:title="@string/floko_settings_title"
          android:summary="@string/crdroid_settings_summary"
          settings:controller="com.crdroid.settings.TopLevelSettingsPreferenceController"/>
- 
-diff --git a/src/com/android/settings/security/applock/AppLockCredentialActivity.kt b/src/com/android/settings/security/applock/AppLockCredentialActivity.kt
-index 4208305c03..746e237704 100644
---- a/src/com/android/settings/security/applock/AppLockCredentialActivity.kt
-+++ b/src/com/android/settings/security/applock/AppLockCredentialActivity.kt
-@@ -125,7 +125,7 @@ class AppLockCredentialActivity : FragmentActivity() {
-         )
-         var allowedAuthenticators = Authenticators.DEVICE_CREDENTIAL
-         if (biometricsAllowed) {
--            allowedAuthenticators = allowedAuthenticators or Authenticators.BIOMETRIC_WEAK
-+            allowedAuthenticators = allowedAuthenticators or Authenticators.BIOMETRIC_STRONG
-         }
- 
-         val promptInfo = PromptInfo().apply {
+

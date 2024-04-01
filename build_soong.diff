@@ -1,8 +1,8 @@
 diff --git a/ui/build/dumpvars.go b/ui/build/dumpvars.go
-index 1150ce5b6..27b89dc3f 100644
+index a6b36b63a..9f0336864 100644
 --- a/ui/build/dumpvars.go
 +++ b/ui/build/dumpvars.go
-@@ -147,7 +147,7 @@ func dumpMakeVars(ctx Context, config Config, goals, vars []string, write_soong_
+@@ -147,10 +147,10 @@ func dumpMakeVars(ctx Context, config Config, goals, vars []string, write_soong_
  var BannerVars = []string{
  	"PLATFORM_VERSION_CODENAME",
  	"PLATFORM_VERSION",
@@ -10,4 +10,8 @@ index 1150ce5b6..27b89dc3f 100644
 +	"FLOKO_VERSION",
  	"PRODUCT_INCLUDE_TAGS",
  	"PRODUCT_SOURCE_ROOT_DIRS",
- 	"TARGET_DEVICE",
+-	"TARGET_DEVICE",
++	"TARGET_PRODUCT",
+ 	"TARGET_BUILD_VARIANT",
+ 	"TARGET_BUILD_APPS",
+ 	"TARGET_BUILD_UNBUNDLED",

@@ -346,28 +346,19 @@ index fddff177..00000000
 -if __name__ == "__main__":
 -    main()
 diff --git a/config/common.mk b/config/common.mk
-index 0c06c66b..4b2e518c 100644
+index de94fbac..b732309f 100644
 --- a/config/common.mk
 +++ b/config/common.mk
-@@ -4,7 +4,7 @@ $(call inherit-product-if-exists, vendor/lineage/config/crdroid.mk)
+@@ -3,7 +3,7 @@ $(call inherit-product-if-exists, vendor/extra/product.mk)
+ $(call inherit-product-if-exists, vendor/lineage/config/crdroid.mk)
  $(call inherit-product-if-exists, vendor/addons/config.mk)
- $(call inherit-product-if-exists, vendor/pixel-framework/config.mk)
  
 -PRODUCT_BRAND ?= crDroidAndroid
 +PRODUCT_BRAND ?= Floko
  
  PRODUCT_BUILD_PROP_OVERRIDES += BUILD_UTC_DATE=0
  
-@@ -16,7 +16,7 @@ PRODUCT_SYSTEM_DEFAULT_PROPERTIES += \
-     ro.com.google.clientidbase=$(PRODUCT_GMS_CLIENTID_BASE)
- endif
- 
--ifeq ($(TARGET_BUILD_VARIANT),eng)
-+ifneq ($(TARGET_BUILD_VARIANT),user)
- # Disable ADB authentication
- PRODUCT_SYSTEM_DEFAULT_PROPERTIES += ro.adb.secure=0
- else
-@@ -121,15 +121,7 @@ PRODUCT_PACKAGES += \
+@@ -120,15 +120,7 @@ PRODUCT_PACKAGES += \
      Jelly
  endif
  
@@ -384,7 +375,7 @@ index 0c06c66b..4b2e518c 100644
  
  PRODUCT_COPY_FILES += \
      vendor/lineage/prebuilt/common/etc/init/init.lineage-updater.rc:$(TARGET_COPY_OUT_SYSTEM_EXT)/etc/init/init.lineage-updater.rc
-@@ -247,9 +239,7 @@ PRODUCT_PACKAGE_OVERLAYS += vendor/crowdin/overlay
+@@ -246,9 +238,7 @@ PRODUCT_PACKAGE_OVERLAYS += vendor/crowdin/overlay
  PRODUCT_EXTRA_RECOVERY_KEYS += \
      vendor/lineage/build/target/product/security/lineage
  
@@ -458,7 +449,7 @@ index fc41773d..00000000
 -PRODUCT_VERSION_MINOR = 0
 -
 -# Increase CR Version with each major release.
--CR_VERSION := 10.2
+-CR_VERSION := 10.3-BETA
 -
 -# Internal version
 -LINEAGE_VERSION := crDroidAndroid-$(PRODUCT_VERSION_MAJOR).$(PRODUCT_VERSION_MINOR)-$(shell date +%Y%m%d)-$(LINEAGE_BUILD)-v$(CR_VERSION)

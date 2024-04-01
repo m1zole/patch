@@ -277,7 +277,7 @@ index 1c46748..5698953 100644
      public static final String ACTION_LAUNCH_SERVICE =
              "org.lineageos.lineageparts.action.TRIGGER_REPORT_METRICS";
 diff --git a/src/org/lineageos/lineageparts/lineagestats/StatsUploadJobService.java b/src/org/lineageos/lineageparts/lineagestats/StatsUploadJobService.java
-index 066ec4c..75ec4ba 100644
+index 066ec4c..b32ad73 100644
 --- a/src/org/lineageos/lineageparts/lineagestats/StatsUploadJobService.java
 +++ b/src/org/lineageos/lineageparts/lineagestats/StatsUploadJobService.java
 @@ -34,18 +34,15 @@ import java.util.concurrent.Executors;
@@ -325,7 +325,7 @@ index 066ec4c..75ec4ba 100644
                                  JSONObject json = buildStatsRequest(deviceId, deviceName,
 -                                        deviceCrVersion, deviceBuildDate, deviceAndroidVersion,
 -                                        deviceTag, deviceCountry, deviceCarrier,
-+                                		 deviceVersion, deviceCountry, deviceCarrier,
++					deviceVersion, deviceCountry, deviceCarrier,
                                          deviceCarrierId);
 -                                success = uploadToCrdroid(json);
 +                                success = uploadToLineage(json);

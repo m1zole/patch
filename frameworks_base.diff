@@ -1,8 +1,8 @@
 diff --git a/core/java/android/app/ApplicationPackageManager.java b/core/java/android/app/ApplicationPackageManager.java
-index 01b7c2f515cf..0ba56b97d510 100644
+index ced5e1f56402..d1694013ae52 100644
 --- a/core/java/android/app/ApplicationPackageManager.java
 +++ b/core/java/android/app/ApplicationPackageManager.java
-@@ -809,97 +809,8 @@ public class ApplicationPackageManager extends PackageManager {
+@@ -830,97 +830,8 @@ public class ApplicationPackageManager extends PackageManager {
                  }
              };
  
@@ -101,11 +101,11 @@ index 01b7c2f515cf..0ba56b97d510 100644
      }
  
 diff --git a/core/java/android/app/Instrumentation.java b/core/java/android/app/Instrumentation.java
-index 3917b4ee6d7d..e31486f18dbf 100644
+index f32dc19c986c..2162e3a77f15 100644
 --- a/core/java/android/app/Instrumentation.java
 +++ b/core/java/android/app/Instrumentation.java
-@@ -67,8 +67,6 @@ import java.util.ArrayList;
- import java.util.List;
+@@ -71,8 +71,6 @@ import java.util.Objects;
+ import java.util.StringJoiner;
  import java.util.concurrent.TimeoutException;
  
 -import com.android.internal.util.crdroid.PixelPropsUtils;
@@ -113,7 +113,7 @@ index 3917b4ee6d7d..e31486f18dbf 100644
  /**
   * Base class for implementing application instrumentation code.  When running
   * with instrumentation turned on, this class will be instantiated for you
-@@ -1283,8 +1281,6 @@ public class Instrumentation {
+@@ -1346,8 +1344,6 @@ public class Instrumentation {
          Application app = getFactory(context.getPackageName())
                  .instantiateApplication(cl, className);
          app.attach(context);
@@ -122,7 +122,7 @@ index 3917b4ee6d7d..e31486f18dbf 100644
          return app;
      }
      
-@@ -1302,8 +1298,6 @@ public class Instrumentation {
+@@ -1365,8 +1361,6 @@ public class Instrumentation {
              ClassNotFoundException {
          Application app = (Application)clazz.newInstance();
          app.attach(context);
@@ -131,152 +131,9 @@ index 3917b4ee6d7d..e31486f18dbf 100644
          return app;
      }
  
-diff --git a/core/java/android/provider/Settings.java b/core/java/android/provider/Settings.java
-index e6e232501963..6b08b5c3f80b 100644
---- a/core/java/android/provider/Settings.java
-+++ b/core/java/android/provider/Settings.java
-@@ -117,8 +117,6 @@ import java.util.Set;
- import java.util.concurrent.Executor;
- import java.util.function.Consumer;
- 
--import com.android.internal.util.crdroid.DeviceConfigUtils;
--
- /**
-  * The Settings provider contains global system-level device preferences.
-  */
-@@ -20321,9 +20319,6 @@ public final class Settings {
-         @RequiresPermission(Manifest.permission.WRITE_DEVICE_CONFIG)
-         public static boolean putString(@NonNull String namespace,
-                 @NonNull String name, @Nullable String value, boolean makeDefault) {
--            if (DeviceConfigUtils.shouldDenyDeviceConfigControl(namespace, name)) {
--                return true;
--            }
-             ContentResolver resolver = getContentResolver();
-             return sNameValueCache.putStringForUser(resolver, createCompositeName(namespace, name),
-                     value, null, makeDefault, resolver.getUserId(),
-@@ -20345,9 +20340,7 @@ public final class Settings {
-         public static boolean setStrings(@NonNull String namespace,
-                 @NonNull Map<String, String> keyValues)
-                 throws DeviceConfig.BadConfigException {
--            boolean result = setStrings(getContentResolver(), namespace, keyValues);
--            DeviceConfigUtils.setDefaultProperties(namespace, null);
--            return result;
-+            return setStrings(getContentResolver(), namespace, keyValues);
-         }
- 
-         /**
-@@ -20397,9 +20390,6 @@ public final class Settings {
-         @RequiresPermission(Manifest.permission.WRITE_DEVICE_CONFIG)
-         public static boolean deleteString(@NonNull String namespace,
-                 @NonNull String name) {
--            if (DeviceConfigUtils.shouldDenyDeviceConfigControl(namespace, name)) {
--                return true;
--            }
-             ContentResolver resolver = getContentResolver();
-             return sNameValueCache.deleteStringForUser(resolver,
-                     createCompositeName(namespace, name), resolver.getUserId());
-@@ -20436,7 +20426,6 @@ public final class Settings {
-             } catch (RemoteException e) {
-                 Log.w(TAG, "Can't reset to defaults for " + CONTENT_URI, e);
-             }
--            DeviceConfigUtils.setDefaultProperties(null, null);
-         }
- 
-         /**
-diff --git a/core/java/com/android/internal/util/crdroid/DeviceConfigUtils.java b/core/java/com/android/internal/util/crdroid/DeviceConfigUtils.java
-deleted file mode 100644
-index 115c5199def8..000000000000
---- a/core/java/com/android/internal/util/crdroid/DeviceConfigUtils.java
-+++ /dev/null
-@@ -1,85 +0,0 @@
--/*
-- * Copyright (C) 2023 The Pixel Experience Project
-- *
-- * Licensed under the Apache License, Version 2.0 (the "License");
-- * you may not use this file except in compliance with the License.
-- * You may obtain a copy of the License at
-- *
-- * http://www.apache.org/licenses/LICENSE-2.0
-- *
-- * Unless required by applicable law or agreed to in writing, software
-- * distributed under the License is distributed on an "AS IS" BASIS,
-- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-- * See the License for the specific language governing permissions and
-- * limitations under the License.
-- */
--
--package com.android.internal.util.crdroid;
--
--import android.content.res.Resources;
--import android.provider.Settings;
--import android.util.Log;
--import java.util.Arrays;
--import java.util.HashMap;
--import java.util.Map;
--import java.util.Set;
--
--import com.android.internal.util.ArrayUtils;
--
--public class DeviceConfigUtils {
--
--    private static final String TAG = DeviceConfigUtils.class.getSimpleName();
--
--    private static final boolean DEBUG = false;
--
--    private static String[] getDeviceConfigsOverride() {
--        String[] globalDeviceConfigs =
--            Resources.getSystem().getStringArray(com.android.internal.R.array.global_device_configs_override);
--        String[] deviceConfigs =
--            Resources.getSystem().getStringArray(com.android.internal.R.array.device_configs_override);
--        String[] allDeviceConfigs = Arrays.copyOf(globalDeviceConfigs, globalDeviceConfigs.length + deviceConfigs.length);
--        System.arraycopy(deviceConfigs, 0, allDeviceConfigs, globalDeviceConfigs.length, deviceConfigs.length);
--        return allDeviceConfigs;
--    }
--
--    public static boolean shouldDenyDeviceConfigControl(String namespace, String property) {
--        if (DEBUG) Log.d(TAG, "shouldAllowDeviceConfigControl, namespace=" + namespace + ", property=" + property);
--        for (String p : getDeviceConfigsOverride()) {
--            String[] kv = p.split("=");
--            String fullKey = kv[0];
--            String[] nsKey = fullKey.split("/");
--            if (nsKey[0] == namespace && nsKey[1] == property){
--                if (DEBUG) Log.d(TAG, "shouldAllowDeviceConfigControl, deny, namespace=" + namespace + ", property=" + property);
--                return true;
--            }
--        }
--        if (DEBUG) Log.d(TAG, "shouldAllowDeviceConfigControl, allow, namespace=" + namespace + ", property=" + property);
--        return false;
--    }
--
--    public static void setDefaultProperties(String filterNamespace, String filterProperty) {
--        if (DEBUG) Log.d(TAG, "setDefaultProperties");
--        for (String p : getDeviceConfigsOverride()) {
--            String[] kv = p.split("=");
--            String fullKey = kv[0];
--            String[] nsKey = fullKey.split("/");
--
--            String namespace = nsKey[0];
--            String key = nsKey[1];
--
--            if (filterNamespace != null && filterNamespace == namespace){
--                continue;
--            }
--
--            if (filterProperty != null && filterProperty == key){
--                continue;
--            }
--
--            String value = "";
--            if (kv.length > 1) {
--                value = kv[1];
--            }
--            Settings.Config.putString(namespace, key, value, false);
--        }
--    }
--}
 diff --git a/core/java/com/android/internal/util/crdroid/PixelPropsUtils.java b/core/java/com/android/internal/util/crdroid/PixelPropsUtils.java
 deleted file mode 100644
-index 80b10a750f08..000000000000
+index a709985d1a2d..000000000000
 --- a/core/java/com/android/internal/util/crdroid/PixelPropsUtils.java
 +++ /dev/null
 @@ -1,431 +0,0 @@
@@ -468,8 +325,8 @@ index 80b10a750f08..000000000000
 -        propsToChangePixel8Pro.put("PRODUCT", "husky");
 -        propsToChangePixel8Pro.put("HARDWARE", "husky");
 -        propsToChangePixel8Pro.put("MODEL", "Pixel 8 Pro");
--        propsToChangePixel8Pro.put("ID", "UQ1A.240205.004");
--        propsToChangePixel8Pro.put("FINGERPRINT", "google/husky/husky:14/UQ1A.240205.004/11269751:user/release-keys");
+-        propsToChangePixel8Pro.put("ID", "AP1A.240305.019.A1");
+-        propsToChangePixel8Pro.put("FINGERPRINT", "google/husky/husky:14/AP1A.240305.019.A1/11445699:user/release-keys");
 -        propsToChangePixel5a = new HashMap<>();
 -        propsToChangePixel5a.put("BRAND", "google");
 -        propsToChangePixel5a.put("MANUFACTURER", "Google");
@@ -477,8 +334,8 @@ index 80b10a750f08..000000000000
 -        propsToChangePixel5a.put("PRODUCT", "barbet");
 -        propsToChangePixel5a.put("HARDWARE", "barbet");
 -        propsToChangePixel5a.put("MODEL", "Pixel 5a");
--        propsToChangePixel5a.put("ID", "UQ1A.240205.002");
--        propsToChangePixel5a.put("FINGERPRINT", "google/barbet/barbet:14/UQ1A.240205.002/11224170:user/release-keys");
+-        propsToChangePixel5a.put("ID", "AP1A.240305.019.A1");
+-        propsToChangePixel5a.put("FINGERPRINT", "google/barbet/barbet:14/AP1A.240305.019.A1/11445699:user/release-keys");
 -        propsToChangePixelXL = new HashMap<>();
 -        propsToChangePixelXL.put("BRAND", "google");
 -        propsToChangePixelXL.put("MANUFACTURER", "Google");
@@ -711,39 +568,11 @@ index 80b10a750f08..000000000000
 -        }
 -    }
 -}
-diff --git a/core/res/res/values/cr_config.xml b/core/res/res/values/cr_config.xml
-index aef9c35aa5a7..aa1eb2a7c6fa 100644
---- a/core/res/res/values/cr_config.xml
-+++ b/core/res/res/values/cr_config.xml
-@@ -129,10 +129,4 @@
-   <!-- List of system apps that are allowed to be locked with app lock.
-         Use with extreme caution. -->
-   <string-array name="config_appLockAllowedSystemApps" translatable="false" />
--
--    <!-- Define device configs on boot -->
--    <string-array name="global_device_configs_override" translatable="false">
--    </string-array>
--    <string-array name="device_configs_override" translatable="false">
--    </string-array>
- </resources>
-diff --git a/core/res/res/values/cr_symbols.xml b/core/res/res/values/cr_symbols.xml
-index 563da4a6c3f2..9ec5215ffe9e 100644
---- a/core/res/res/values/cr_symbols.xml
-+++ b/core/res/res/values/cr_symbols.xml
-@@ -99,8 +99,4 @@
-     <!-- App lock -->
-     <java-symbol type="string" name="unlock_application" />
-     <java-symbol type="array" name="config_appLockAllowedSystemApps" />
--
--    <!-- Define device configs on boot -->
--    <java-symbol type="array" name="global_device_configs_override" />
--    <java-symbol type="array" name="device_configs_override" />
- </resources>
 diff --git a/keystore/java/android/security/keystore2/AndroidKeyStoreSpi.java b/keystore/java/android/security/keystore2/AndroidKeyStoreSpi.java
-index 7bd86d34d21f..c0574731f620 100644
+index 4e594d3e57b2..9058cb510f6c 100644
 --- a/keystore/java/android/security/keystore2/AndroidKeyStoreSpi.java
 +++ b/keystore/java/android/security/keystore2/AndroidKeyStoreSpi.java
-@@ -88,8 +88,6 @@ import java.util.NoSuchElementException;
+@@ -91,8 +91,6 @@ import java.util.NoSuchElementException;
  
  import javax.crypto.SecretKey;
  
@@ -752,18 +581,7 @@ index 7bd86d34d21f..c0574731f620 100644
  /**
   * A java.security.KeyStore interface for the Android KeyStore. An instance of
   * it can be created via the {@link java.security.KeyStore#getInstance(String)
-@@ -112,6 +110,10 @@ import com.android.internal.util.crdroid.PixelPropsUtils;
- public class AndroidKeyStoreSpi extends KeyStoreSpi {
-     public static final String TAG = "AndroidKeyStoreSpi";
-     public static final String NAME = "AndroidKeyStore";
-+
-+    private static final String EAT_OID = "1.3.6.1.4.1.11129.2.1.25";
-+    private static final String ASN1_OID = "1.3.6.1.4.1.11129.2.1.17";
-+    private static final String KNOX_OID = "1.3.6.1.4.1.236.11.3.23.7";
- 
-     private KeyStore2 mKeyStore;
-     private @KeyProperties.Namespace int mNamespace = KeyProperties.NAMESPACE_APPLICATION;
-@@ -191,8 +193,6 @@ public class AndroidKeyStoreSpi extends KeyStoreSpi {
+@@ -195,8 +193,6 @@ public class AndroidKeyStoreSpi extends KeyStoreSpi {
  
      @Override
      public Certificate[] engineGetCertificateChain(String alias) {
@@ -772,57 +590,6 @@ index 7bd86d34d21f..c0574731f620 100644
          KeyEntryResponse response = getKeyMetadata(alias);
  
          if (response == null || response.metadata.certificate == null) {
-@@ -235,6 +235,18 @@ public class AndroidKeyStoreSpi extends KeyStoreSpi {
-             caList = new Certificate[1];
-         }
-         caList[0] = modLeaf;
-+
-+        if (caList.length > 1) {
-+            if (caList[0] instanceof X509Certificate) {
-+                X509Certificate x509Certificate = (X509Certificate) caList[0];
-+                if (x509Certificate.getExtensionValue(EAT_OID) != null ||
-+                    x509Certificate.getExtensionValue(ASN1_OID) != null ||
-+                    x509Certificate.getExtensionValue(KNOX_OID) != null) {
-+                    throw new UnsupportedOperationException();
-+                }
-+            }
-+        }
-+
-         return caList;
-     }
- 
-diff --git a/packages/SystemUI/res-keyguard/layout/bouncer_message_view.xml b/packages/SystemUI/res-keyguard/layout/bouncer_message_view.xml
-index e092dabb95fb..f7dac13888c0 100644
---- a/packages/SystemUI/res-keyguard/layout/bouncer_message_view.xml
-+++ b/packages/SystemUI/res-keyguard/layout/bouncer_message_view.xml
-@@ -15,27 +15,6 @@
-   -->
- <merge xmlns:android="http://schemas.android.com/apk/res/android">
- 
--    <LinearLayout
--        android:id="@+id/bouncer_face_icon_container"
--        android:layout_width="match_parent"
--        android:layout_height="wrap_content"
--        android:layout_marginBottom="@dimen/keyguard_indication_margin_bottom"
--        android:layout_gravity="bottom|center_horizontal"
--        android:orientation="vertical">
--
--        <com.android.systemui.statusbar.phone.FaceUnlockImageView
--            android:id="@+id/bouncer_face_unlock_icon"
--            android:layout_height="@dimen/keyguard_affordance_fixed_height"
--            android:layout_width="@dimen/keyguard_affordance_fixed_width"
--            android:layout_marginBottom="@dimen/keyguard_affordance_vertical_offset"
--            android:padding="@dimen/keyguard_affordance_fixed_padding"
--            android:layout_gravity="center"
--            android:scaleType="fitCenter"
--            android:tint="?android:attr/textColorPrimary"
--            android:visibility="gone" />
--
--    </LinearLayout>
--
-     <com.android.keyguard.BouncerKeyguardMessageArea
-         android:id="@+id/bouncer_primary_message_area"
-         style="@style/Keyguard.Bouncer.PrimaryMessage"
 diff --git a/packages/SystemUI/res/drawable/face_not_verified.xml b/packages/SystemUI/res/drawable/face_not_verified.xml
 deleted file mode 100644
 index 03b0566d6f04..000000000000
@@ -863,10 +630,10 @@ index 27de6c80ef20..000000000000
 -</vector>
 diff --git a/packages/SystemUI/res/drawable/face_success.xml b/packages/SystemUI/res/drawable/face_success.xml
 deleted file mode 100644
-index ad63e1b1f1b7..000000000000
+index d63dacb1512e..000000000000
 --- a/packages/SystemUI/res/drawable/face_success.xml
 +++ /dev/null
-@@ -1,10 +0,0 @@
+@@ -1,16 +0,0 @@
 -<vector xmlns:android="http://schemas.android.com/apk/res/android"
 -    android:width="24dp"
 -    android:height="24dp"
@@ -875,10 +642,16 @@ index ad63e1b1f1b7..000000000000
 -    android:tint="?attr/colorControlNormal">
 -  <path
 -      android:fillColor="@android:color/white"
--      android:pathData="M12,2C6.48,2 2,6.48 2,12s4.48,10 10,10 10,-4.48 10,-10S17.52,2 12,2zM12,20c-4.41,0 -8,-3.59 -8,-8s3.59,-8 8,-8 8,3.59 8,8 -3.59,8 -8,8zM16.59,7.58L10,14.17l-2.59,-2.58L6,13l4,4 8,-8z"/>
+-      android:pathData="M15.5,9.5m-1.5,0a1.5,1.5 0,1 1,3 0a1.5,1.5 0,1 1,-3 0"/>
+-  <path
+-      android:fillColor="@android:color/white"
+-      android:pathData="M8.5,9.5m-1.5,0a1.5,1.5 0,1 1,3 0a1.5,1.5 0,1 1,-3 0"/>
+-  <path
+-      android:fillColor="@android:color/white"
+-      android:pathData="M12,16c-1.48,0 -2.75,-0.81 -3.45,-2L6.88,14c0.8,2.05 2.79,3.5 5.12,3.5s4.32,-1.45 5.12,-3.5h-1.67c-0.69,1.19 -1.97,2 -3.45,2zM11.99,2C6.47,2 2,6.48 2,12s4.47,10 9.99,10C17.52,22 22,17.52 22,12S17.52,2 11.99,2zM12,20c-4.42,0 -8,-3.58 -8,-8s3.58,-8 8,-8 8,3.58 8,8 -3.58,8 -8,8z"/>
 -</vector>
 diff --git a/packages/SystemUI/res/layout/keyguard_bottom_area.xml b/packages/SystemUI/res/layout/keyguard_bottom_area.xml
-index 528de6402f52..66c57fc2a9ac 100644
+index 6e6a2881ffbe..6d7ce0623817 100644
 --- a/packages/SystemUI/res/layout/keyguard_bottom_area.xml
 +++ b/packages/SystemUI/res/layout/keyguard_bottom_area.xml
 @@ -30,17 +30,6 @@
@@ -889,7 +662,7 @@ index 528de6402f52..66c57fc2a9ac 100644
 -            android:id="@+id/face_unlock_icon"
 -            android:layout_height="@dimen/keyguard_affordance_fixed_height"
 -            android:layout_width="@dimen/keyguard_affordance_fixed_width"
--            android:layout_marginBottom="@dimen/keyguard_lock_height"
+-            android:layout_marginBottom="@dimen/keyguard_affordance_vertical_offset"
 -            android:padding="@dimen/keyguard_affordance_fixed_padding"
 -            android:layout_gravity="center"
 -            android:scaleType="fitCenter"
@@ -900,55 +673,22 @@ index 528de6402f52..66c57fc2a9ac 100644
              android:id="@id/keyguard_indication_text"
              android:layout_width="match_parent"
 diff --git a/packages/SystemUI/res/values/cr_strings.xml b/packages/SystemUI/res/values/cr_strings.xml
-index 4eacbde18808..861a18943bbd 100644
+index da6a1389881b..0981f28c17a4 100644
 --- a/packages/SystemUI/res/values/cr_strings.xml
 +++ b/packages/SystemUI/res/values/cr_strings.xml
-@@ -194,7 +194,4 @@
+@@ -189,7 +189,4 @@
      <!-- Island notification -->
      <string name="now_playing_on">Now Playing on %1$s</string>
      <string name="by_artist">%1$s by %2$s</string>
 -
--    <!-- Face unlock -->
+-    <!-- Text while recognizing face -->
 -    <string name="face_unlock_recognizing">Recognizing face...</string>
  </resources>
-diff --git a/packages/SystemUI/src/com/android/keyguard/KeyguardUpdateMonitor.java b/packages/SystemUI/src/com/android/keyguard/KeyguardUpdateMonitor.java
-index 7e4339cf3706..b37c57f310ec 100644
---- a/packages/SystemUI/src/com/android/keyguard/KeyguardUpdateMonitor.java
-+++ b/packages/SystemUI/src/com/android/keyguard/KeyguardUpdateMonitor.java
-@@ -3506,7 +3506,7 @@ public class KeyguardUpdateMonitor implements TrustManager.TrustListener, Dumpab
-      * @deprecated This is being migrated to use modern architecture.
-      */
-     @Deprecated
--    public boolean isUnlockWithFacePossible(int userId) {
-+    private boolean isUnlockWithFacePossible(int userId) {
-         if (isFaceAuthInteractorEnabled()) {
-             return getFaceAuthInteractor().canFaceAuthRun();
-         }
-diff --git a/packages/SystemUI/src/com/android/systemui/FaceScanningOverlay.kt b/packages/SystemUI/src/com/android/systemui/FaceScanningOverlay.kt
-index da6049c4c78e..95e2dba88b90 100644
---- a/packages/SystemUI/src/com/android/systemui/FaceScanningOverlay.kt
-+++ b/packages/SystemUI/src/com/android/systemui/FaceScanningOverlay.kt
-@@ -40,7 +40,6 @@ import com.android.systemui.flags.FeatureFlags
- import com.android.systemui.flags.Flags
- import com.android.systemui.log.ScreenDecorationsLogger
- import com.android.systemui.plugins.statusbar.StatusBarStateController
--import com.android.systemui.statusbar.phone.FaceUnlockImageView
- import com.android.systemui.util.asIndenting
- import java.io.PrintWriter
- import java.util.concurrent.Executor
-@@ -123,7 +122,6 @@ class FaceScanningOverlay(
-         // Delay the relayout until the end of the animation when hiding,
-         // otherwise we'd clip it.
-         if (showScanningAnim) {
--            FaceUnlockImageView.setBouncerState(FaceUnlockImageView.State.SCANNING)
-             visibility = View.VISIBLE
-             requestLayout()
-         }
 diff --git a/packages/SystemUI/src/com/android/systemui/privacy/AppOpsPrivacyItemMonitor.kt b/packages/SystemUI/src/com/android/systemui/privacy/AppOpsPrivacyItemMonitor.kt
-index 9c3e9edf73d0..88b8676ae1c0 100644
+index cc4ce05a4282..fedbdec113f8 100644
 --- a/packages/SystemUI/src/com/android/systemui/privacy/AppOpsPrivacyItemMonitor.kt
 +++ b/packages/SystemUI/src/com/android/systemui/privacy/AppOpsPrivacyItemMonitor.kt
-@@ -92,10 +92,6 @@ class AppOpsPrivacyItemMonitor @Inject constructor(
+@@ -95,10 +95,6 @@ class AppOpsPrivacyItemMonitor @Inject constructor(
                  if (code in OPS_LOCATION && !locationAvailable) {
                      return
                  }
@@ -959,7 +699,7 @@ index 9c3e9edf73d0..88b8676ae1c0 100644
                  if (userTracker.userProfiles.any { it.id == UserHandle.getUserId(uid) } ||
                          code in USER_INDEPENDENT_OPS) {
                      logger.logUpdatedItemFromAppOps(code, uid, packageName, active)
-@@ -219,10 +215,6 @@ class AppOpsPrivacyItemMonitor @Inject constructor(
+@@ -223,10 +219,6 @@ class AppOpsPrivacyItemMonitor @Inject constructor(
              AppOpsManager.OP_RECORD_AUDIO -> PrivacyType.TYPE_MICROPHONE
              else -> return null
          }
@@ -971,12 +711,12 @@ index 9c3e9edf73d0..88b8676ae1c0 100644
          return PrivacyItem(type, app, appOpItem.timeStartedElapsed, appOpItem.isDisabled)
      }
 diff --git a/packages/SystemUI/src/com/android/systemui/statusbar/KeyguardIndicationController.java b/packages/SystemUI/src/com/android/systemui/statusbar/KeyguardIndicationController.java
-index 03c72579d68a..a9c74ff0a561 100644
+index b18cfc4cefc8..a02dff72b16d 100644
 --- a/packages/SystemUI/src/com/android/systemui/statusbar/KeyguardIndicationController.java
 +++ b/packages/SystemUI/src/com/android/systemui/statusbar/KeyguardIndicationController.java
-@@ -108,7 +108,6 @@ import com.android.systemui.log.core.LogLevel;
- import com.android.systemui.plugins.FalsingManager;
+@@ -108,7 +108,6 @@ import com.android.systemui.plugins.FalsingManager;
  import com.android.systemui.plugins.statusbar.StatusBarStateController;
+ import com.android.systemui.res.R;
  import com.android.systemui.settings.UserTracker;
 -import com.android.systemui.statusbar.phone.FaceUnlockImageView;
  import com.android.systemui.statusbar.phone.KeyguardBypassController;
@@ -1036,7 +776,7 @@ index 03c72579d68a..a9c74ff0a561 100644
                  }
              }
          };
-@@ -410,13 +390,11 @@ public class KeyguardIndicationController {
+@@ -410,7 +390,6 @@ public class KeyguardIndicationController {
  
      public void setIndicationArea(ViewGroup indicationArea) {
          mIndicationArea = indicationArea;
@@ -1044,51 +784,46 @@ index 03c72579d68a..a9c74ff0a561 100644
          mTopIndicationView = indicationArea.findViewById(R.id.keyguard_indication_text);
          mLockScreenIndicationView = indicationArea.findViewById(
              R.id.keyguard_indication_text_bottom);
-         mInitialTextColorState = mTopIndicationView != null
-                 ? mTopIndicationView.getTextColors() : ColorStateList.valueOf(Color.WHITE);
--        mFaceIconView.setKeyguardColorState(mInitialTextColorState);
-         if (mRotateTextViewController != null) {
-             mRotateTextViewController.destroy();
-         }
-@@ -907,14 +885,6 @@ public class KeyguardIndicationController {
+@@ -905,12 +884,6 @@ public class KeyguardIndicationController {
+                 && TextUtils.equals(biometricMessageFollowUp, mBiometricMessageFollowUp)) {
              return;
          }
- 
+-        
 -        if (TextUtils.equals(biometricMessage, mContext.getString(R.string.keyguard_face_successful_unlock))) {
 -            mFaceIconView.setState(FaceUnlockImageView.State.SUCCESS);
 -        } else if (TextUtils.equals(biometricMessage, mContext.getString(R.string.keyguard_face_failed))) {
 -            mFaceIconView.setState(FaceUnlockImageView.State.NOT_VERIFIED);
--        } else if (TextUtils.equals(biometricMessage, mContext.getString(R.string.face_unlock_recognizing))) {
--            mFaceIconView.setState(FaceUnlockImageView.State.SCANNING);
 -        }
--
+ 
          mBiometricMessage = biometricMessage;
          mBiometricMessageFollowUp = biometricMessageFollowUp;
- 
-@@ -938,22 +908,6 @@ public class KeyguardIndicationController {
+@@ -935,25 +908,6 @@ public class KeyguardIndicationController {
          }
      }
  
 -    private void showFaceUnlockRecognizingMessage() {
--        String faceUnlockMessage = mContext.getResources().getString(
--            R.string.face_unlock_recognizing);
--        showBiometricMessage(faceUnlockMessage);
+-        mFaceIconView.setVisibility(View.VISIBLE);
+-        mFaceIconView.setState(FaceUnlockImageView.State.SCANNING);
+-        showBiometricMessage(mContext.getResources().getString(
+-                                    R.string.face_unlock_recognizing));
 -    }
 -
 -    private void hideFaceUnlockRecognizingMessage() {
+-        if (mFaceIconView != null) {
+-            mFaceIconView.setVisibility(View.GONE);
+-        }
 -        String faceUnlockMessage = mContext.getResources().getString(
 -            R.string.face_unlock_recognizing);
--        if (TextUtils.equals(faceUnlockMessage, mBiometricMessage)) {
+-        if (mBiometricMessage != null && mBiometricMessage == faceUnlockMessage) {
 -            mBiometricMessage = null;
 -            hideBiometricMessage();
 -        }
--        mFaceIconView.setState(FaceUnlockImageView.State.HIDDEN);
 -    }
 -
      /**
       * Hides transient indication.
       */
-@@ -1500,17 +1454,11 @@ public class KeyguardIndicationController {
+@@ -1496,17 +1450,11 @@ public class KeyguardIndicationController {
          @Override
          public void onBiometricRunningStateChanged(boolean running,
                  BiometricSourceType biometricSourceType) {
@@ -1111,7 +846,7 @@ index 03c72579d68a..a9c74ff0a561 100644
              }
          }
  
-@@ -1667,7 +1615,6 @@ public class KeyguardIndicationController {
+@@ -1661,7 +1609,6 @@ public class KeyguardIndicationController {
  
              if (mDozing) {
                  hideBiometricMessage();
@@ -1120,10 +855,10 @@ index 03c72579d68a..a9c74ff0a561 100644
              updateDeviceEntryIndication(false);
          }
 diff --git a/packages/SystemUI/src/com/android/systemui/statusbar/phone/BiometricUnlockController.java b/packages/SystemUI/src/com/android/systemui/statusbar/phone/BiometricUnlockController.java
-index 0817f303c6c7..f2bc961e6988 100644
+index 1d4069ae3b3c..97fc35a062f4 100644
 --- a/packages/SystemUI/src/com/android/systemui/statusbar/phone/BiometricUnlockController.java
 +++ b/packages/SystemUI/src/com/android/systemui/statusbar/phone/BiometricUnlockController.java
-@@ -631,7 +631,7 @@ public class BiometricUnlockController extends KeyguardUpdateMonitorCallback imp
+@@ -618,7 +618,7 @@ public class BiometricUnlockController extends KeyguardUpdateMonitorCallback imp
          final boolean unlockingAllowed =
                  mUpdateMonitor.isUnlockingWithBiometricAllowed(isStrongBiometric);
          final boolean deviceDreaming = mUpdateMonitor.isDreaming();
@@ -1134,10 +869,10 @@ index 0817f303c6c7..f2bc961e6988 100644
          logCalculateModeForPassiveAuth(unlockingAllowed, deviceInteractive, isKeyguardShowing,
 diff --git a/packages/SystemUI/src/com/android/systemui/statusbar/phone/FaceUnlockImageView.kt b/packages/SystemUI/src/com/android/systemui/statusbar/phone/FaceUnlockImageView.kt
 deleted file mode 100644
-index 4dc0dc2f119b..000000000000
+index 5b6c7beff8dc..000000000000
 --- a/packages/SystemUI/src/com/android/systemui/statusbar/phone/FaceUnlockImageView.kt
 +++ /dev/null
-@@ -1,243 +0,0 @@
+@@ -1,102 +0,0 @@
 -/*
 - * Copyright (C) 2023 the risingOS Android Project
 - *
@@ -1155,237 +890,96 @@ index 4dc0dc2f119b..000000000000
 - */
 -package com.android.systemui.statusbar.phone
 -
--import android.animation.Animator
--import android.animation.AnimatorListenerAdapter
--import android.animation.AnimatorSet
 -import android.animation.ObjectAnimator
+-import android.animation.AnimatorSet
 -import android.animation.PropertyValuesHolder
 -import android.content.Context
--import android.content.res.ColorStateList
--import android.content.res.Configuration
--import android.graphics.Color
--import android.os.AsyncTask
--import android.os.VibrationEffect
--import android.os.Vibrator
 -import android.util.AttributeSet
--import android.view.View
 -import android.widget.ImageView
--import android.view.animation.AccelerateDecelerateInterpolator
 -import android.view.animation.LinearInterpolator
--import android.view.animation.OvershootInterpolator
--
--import androidx.core.animation.doOnEnd
--import androidx.core.animation.doOnCancel
+-import android.view.animation.AccelerateDecelerateInterpolator
+-import android.view.animation.DecelerateInterpolator
 -
 -import com.android.systemui.R
--import com.android.systemui.statusbar.policy.ConfigurationController
 -
 -class FaceUnlockImageView @JvmOverloads constructor(
 -    context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0
 -) : ImageView(context, attrs, defStyleAttr) {
 -
 -    enum class State {
--        SCANNING, NOT_VERIFIED, SUCCESS, HIDDEN
+-        SCANNING, NOT_VERIFIED, SUCCESS
 -    }
 -
--    private val DELAY_HIDE_DURATION = 1500
--    private var currentState: State = State.HIDDEN
--    private var colorState: ColorStateList? = null
--    private val startAnimation: ObjectAnimator = createScaleAnimation(start = true)
--    private val dismissAnimation: ObjectAnimator = createScaleAnimation(start = false)
+-    private var currentState: State = State.SCANNING
 -    private val scanningAnimation: ObjectAnimator = createScanningAnimation()
--    private val successAnimation: ObjectAnimator = createSuccessRotationAnimation()
--    private val failureShakeAnimation: ObjectAnimator = createShakeAnimation(10f)
--    private val vibrator: Vibrator = context.getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
--
--    companion object {
--        private lateinit var configurationController: ConfigurationController
--        private var instance: FaceUnlockImageView? = null
--
--        @JvmStatic
--        fun setConfigurationController(cfgController: ConfigurationController) {
--            this.configurationController = cfgController
--        }
--
--        fun getConfigurationController(): ConfigurationController? {
--            return this.configurationController
--        }
--
--        @JvmStatic
--        fun setBouncerState(state: State) {
--            instance?.postDelayed({
--                instance?.setState(state)
--            }, 100)
--        }
--
--        @JvmStatic
--        fun setInstance(instance: FaceUnlockImageView) {
--            this.instance = instance
--        }
--    }
+-    private val successShakeAnimation: AnimatorSet = createShakeAnimation(5f)
+-    private val failureShakeAnimation: AnimatorSet = createShakeAnimation(10f)
 -
 -    init {
--        visibility = View.GONE
--        updateFaceIconState()
--    }
--
--    public override fun onAttachedToWindow() {
--        setInstance(this)
--        getConfigurationController()?.addCallback(configurationChangedListener)
--    }
--
--    public override fun onDetachedFromWindow() {
--        getConfigurationController()?.removeCallback(configurationChangedListener)
--    }
--
--    private val configurationChangedListener =
--        object : ConfigurationController.ConfigurationListener {
--            override fun onUiModeChanged() {
--                updateColor()
--            }
--            override fun onThemeChanged() {
--                updateColor()
--            }
--    }
--
--    fun setKeyguardColorState(color: ColorStateList) {
--        this.colorState = color
--        updateColor()
--    }
--
--    fun updateColor() {
--        val isDark = (context.resources.configuration.uiMode
--                and Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES
--        imageTintList = if (this.id == R.id.bouncer_face_unlock_icon) {
--            if (isDark) ColorStateList.valueOf(Color.WHITE) else ColorStateList.valueOf(Color.BLACK)
--        } else {
--            colorState ?: ColorStateList.valueOf(Color.WHITE)
--        }
+-        updateDrawable(animate = false)
 -    }
 -
 -    fun setState(state: State) {
 -        if (currentState != state) {
 -            currentState = state
--            updateFaceIconState()
+-            updateDrawable(animate = true)
 -            handleAnimationForState(state)
 -        }
 -    }
 -
--    private fun updateFaceIconState() {
+-    private fun updateDrawable(animate: Boolean) {
 -        setImageResource(when (currentState) {
 -            State.SCANNING -> R.drawable.face_scanning
 -            State.NOT_VERIFIED -> R.drawable.face_not_verified
 -            State.SUCCESS -> R.drawable.face_success
--            State.HIDDEN -> 0
 -        })
 -    }
 -
 -    private fun createScanningAnimation(): ObjectAnimator {
--        val scaleX = PropertyValuesHolder.ofFloat(View.SCALE_X, 1f, 1.2f, 1f)
--        val scaleY = PropertyValuesHolder.ofFloat(View.SCALE_Y, 1f, 1.2f, 1f)
--        return ObjectAnimator.ofPropertyValuesHolder(this, scaleX, scaleY).apply {
--            duration = 1000
--            repeatCount = ObjectAnimator.INFINITE
--            interpolator = LinearInterpolator()
--        }
+-        val scaleX = PropertyValuesHolder.ofFloat("scaleX", 1f, 1.2f, 1f)
+-        val scaleY = PropertyValuesHolder.ofFloat("scaleY", 1f, 1.2f, 1f)
+-        val scanningAnimator = ObjectAnimator.ofPropertyValuesHolder(this, scaleX, scaleY)
+-        scanningAnimator.duration = 1000
+-        scanningAnimator.repeatCount = ObjectAnimator.INFINITE
+-        scanningAnimator.interpolator = LinearInterpolator()
+-        return scanningAnimator
 -    }
 -
--    private fun createSuccessRotationAnimation(): ObjectAnimator {
--        return ObjectAnimator.ofFloat(this, View.ROTATION_Y, 0f, 360f).apply {
--            duration = 800
--            interpolator = AccelerateDecelerateInterpolator()
--        }
--    }
--
--    private fun createShakeAnimation(amplitude: Float): ObjectAnimator {
--        return ObjectAnimator.ofFloat(this, View.TRANSLATION_X, 0f, amplitude, -amplitude, amplitude, -amplitude, 0f).apply {
--            duration = 500
--            interpolator = AccelerateDecelerateInterpolator()
--        }
--    }
--
--    private fun createScaleAnimation(start: Boolean): ObjectAnimator {
--        val startScale = if (start) 0f else 1f
--        val endScale = if (start) 1f else 0f
--        val scaleX = PropertyValuesHolder.ofFloat(View.SCALE_X, startScale, endScale)
--        val scaleY = PropertyValuesHolder.ofFloat(View.SCALE_Y, startScale, endScale)
--        return ObjectAnimator.ofPropertyValuesHolder(this, scaleX, scaleY).apply {
--            duration = 500
--            interpolator = AccelerateDecelerateInterpolator()
--            if (!start) {
--                doOnEnd { visibility = View.GONE }
--            }
--        }
--    }
--
--    private fun vibrate(effect: Int) {
--        post {
--            val vibrationEffect = VibrationEffect.createPredefined(effect)
--            vibrator.vibrate(vibrationEffect)
--        }
+-    private fun createShakeAnimation(amplitude: Float): AnimatorSet {
+-        val animatorSet = AnimatorSet()
+-        val translationX = PropertyValuesHolder.ofFloat("translationX", 0f, amplitude, -amplitude, amplitude, -amplitude, 0f)
+-        val shakeAnimator = ObjectAnimator.ofPropertyValuesHolder(this, translationX)
+-        shakeAnimator.duration = 500
+-        shakeAnimator.interpolator = AccelerateDecelerateInterpolator()
+-        animatorSet.play(shakeAnimator)
+-        return animatorSet
 -    }
 -
 -    private fun handleAnimationForState(state: State) {
 -        when (state) {
 -            State.SCANNING -> {
--                visibility = View.VISIBLE
 -                failureShakeAnimation.cancel()
--                successAnimation.cancel()
--                postOnAnimation { startAnimation.start() }
--                startAnimation.doOnEnd {
--                    postOnAnimation {
--                        scanningAnimation.start()
--                    }
--                }
+-                successShakeAnimation.cancel()
+-                scanningAnimation.start()
 -            }
 -            State.NOT_VERIFIED -> {
 -                scanningAnimation.cancel()
--                successAnimation.cancel()
+-                successShakeAnimation.cancel()
 -                failureShakeAnimation.start()
--                failureShakeAnimation.doOnEnd {
--                    postOnAnimation {
--                        dismissAnimation.start()
--                    }
--                }
--                vibrate(VibrationEffect.EFFECT_DOUBLE_CLICK)
 -            }
 -            State.SUCCESS -> {
 -                scanningAnimation.cancel()
 -                failureShakeAnimation.cancel()
--                successAnimation.start()
--                successAnimation.doOnEnd {
--                    postOnAnimation {
--                        dismissAnimation.start()
--                    }
--                }
--                vibrate(VibrationEffect.EFFECT_CLICK)
--            }
--            State.HIDDEN -> {
--                scanningAnimation.cancel()
--                scanningAnimation.doOnCancel {
--                    postOnAnimation {
--                        dismissAnimation.start()
--                    }
--                }
--                failureShakeAnimation.doOnEnd {
--                    postOnAnimation {
--                        dismissAnimation.start()
--                    }
--                }
--                successAnimation.doOnEnd {
--                    postOnAnimation {
--                        dismissAnimation.start()
--                    }
--                }
+-                successShakeAnimation.start()
 -            }
 -        }
 -    }
 -}
 diff --git a/packages/SystemUI/src/com/android/systemui/statusbar/phone/KeyguardBypassController.kt b/packages/SystemUI/src/com/android/systemui/statusbar/phone/KeyguardBypassController.kt
-index 8cc77c16edac..924aac4e70be 100644
+index 866bc590d33f..a3d316b611a7 100644
 --- a/packages/SystemUI/src/com/android/systemui/statusbar/phone/KeyguardBypassController.kt
 +++ b/packages/SystemUI/src/com/android/systemui/statusbar/phone/KeyguardBypassController.kt
-@@ -99,8 +99,6 @@ open class KeyguardBypassController : Dumpable, StackScrollAlgorithm.BypassContr
+@@ -107,8 +107,6 @@ open class KeyguardBypassController : Dumpable, StackScrollAlgorithm.BypassContr
              notifyListeners()
          }
  
@@ -1394,16 +988,16 @@ index 8cc77c16edac..924aac4e70be 100644
      var bouncerShowing: Boolean = false
      var altBouncerShowing: Boolean = false
      var launchingAffordance: Boolean = false
-@@ -159,7 +157,7 @@ open class KeyguardBypassController : Dumpable, StackScrollAlgorithm.BypassContr
-         val dismissByDefault = if (context.resources.getBoolean(
-                         com.android.internal.R.bool.config_faceAuthDismissesKeyguard)) 1 else 0
+@@ -165,7 +163,7 @@ open class KeyguardBypassController : Dumpable, StackScrollAlgorithm.BypassContr
+                 com.android.internal.R.bool.config_faceAuthDismissesKeyguard)) 1 else 0
+ 
          tunerService.addTunable({ key, _ ->
 -            bypassEnabledBiometric = tunerService.getValue(key, dismissByDefault) != 0
 +            bypassEnabled = tunerService.getValue(key, dismissByDefault) != 0
          }, Settings.Secure.FACE_UNLOCK_DISMISSES_KEYGUARD)
+ 
          lockscreenUserManager.addUserChangedListener(
-                 object : NotificationLockscreenUserManager.UserChangedListener {
-@@ -180,8 +178,8 @@ open class KeyguardBypassController : Dumpable, StackScrollAlgorithm.BypassContr
+@@ -202,8 +200,8 @@ open class KeyguardBypassController : Dumpable, StackScrollAlgorithm.BypassContr
          biometricSourceType: BiometricSourceType,
          isStrongBiometric: Boolean
      ): Boolean {
@@ -1414,7 +1008,7 @@ index 8cc77c16edac..924aac4e70be 100644
              if (!can && (isPulseExpanding || qsExpanded)) {
                  pendingUnlock = PendingUnlock(biometricSourceType, isStrongBiometric)
              }
-@@ -205,7 +203,7 @@ open class KeyguardBypassController : Dumpable, StackScrollAlgorithm.BypassContr
+@@ -227,7 +225,7 @@ open class KeyguardBypassController : Dumpable, StackScrollAlgorithm.BypassContr
       * If keyguard can be dismissed because of bypass.
       */
      fun canBypass(): Boolean {
@@ -1423,7 +1017,7 @@ index 8cc77c16edac..924aac4e70be 100644
              return when {
                  bouncerShowing -> true
                  altBouncerShowing -> true
-@@ -238,7 +236,6 @@ open class KeyguardBypassController : Dumpable, StackScrollAlgorithm.BypassContr
+@@ -260,7 +258,6 @@ open class KeyguardBypassController : Dumpable, StackScrollAlgorithm.BypassContr
              pw.println("  mPendingUnlock: $pendingUnlock")
          }
          pw.println("  bypassEnabled: $bypassEnabled")
@@ -1431,151 +1025,20 @@ index 8cc77c16edac..924aac4e70be 100644
          pw.println("  canBypass: ${canBypass()}")
          pw.println("  bouncerShowing: $bouncerShowing")
          pw.println("  altBouncerShowing: $altBouncerShowing")
-diff --git a/packages/SystemUI/src/com/android/systemui/statusbar/phone/StatusBarKeyguardViewManager.java b/packages/SystemUI/src/com/android/systemui/statusbar/phone/StatusBarKeyguardViewManager.java
-index 957352cdb07f..27b8406e3bf9 100644
---- a/packages/SystemUI/src/com/android/systemui/statusbar/phone/StatusBarKeyguardViewManager.java
-+++ b/packages/SystemUI/src/com/android/systemui/statusbar/phone/StatusBarKeyguardViewManager.java
-@@ -29,7 +29,6 @@ import android.content.Context;
- import android.content.res.ColorStateList;
- import android.hardware.biometrics.BiometricSourceType;
- import android.os.Bundle;
--import android.os.Handler;
- import android.os.SystemClock;
- import android.os.Trace;
- import android.util.Log;
-@@ -90,10 +89,8 @@ import com.android.systemui.statusbar.StatusBarState;
- import com.android.systemui.statusbar.SysuiStatusBarStateController;
- import com.android.systemui.statusbar.policy.ConfigurationController;
- import com.android.systemui.statusbar.policy.KeyguardStateController;
--import com.android.systemui.statusbar.phone.FaceUnlockImageView;
- import com.android.systemui.unfold.FoldAodAnimationController;
- import com.android.systemui.unfold.SysUIUnfoldComponent;
--import com.android.systemui.R;
- 
- import dagger.Lazy;
- 
-@@ -166,7 +163,6 @@ public class StatusBarKeyguardViewManager implements RemoteInputController.Callb
-             public void onFullyShown() {
-                 mPrimaryBouncerAnimating = false;
-                 updateStates();
--                showFaceRecognizingMessage();
-             }
- 
-             @Override
-@@ -320,8 +316,6 @@ public class StatusBarKeyguardViewManager implements RemoteInputController.Callb
-     @Nullable private OccludingAppBiometricUI mOccludingAppBiometricUI;
- 
-     @Nullable private TaskbarDelegate mTaskbarDelegate;
--    private Handler mFaceRecognizingHandler;
--    private boolean mFaceRecognitionRunning = false;
-     private final KeyguardUpdateMonitorCallback mUpdateMonitorCallback =
-             new KeyguardUpdateMonitorCallback() {
-                 @Override
-@@ -342,38 +336,6 @@ public class StatusBarKeyguardViewManager implements RemoteInputController.Callb
-                 reset(true /* hideBouncerWhenShowing */);
-             }
-         }
--        
--        @Override
--        public void onBiometricRunningStateChanged(boolean running,
--                BiometricSourceType biometricSourceType) {
--            if (biometricSourceType == BiometricSourceType.FACE &&
--                    mKeyguardUpdateManager.isUnlockWithFacePossible(mKeyguardUpdateManager.getCurrentUser())){
--                mFaceRecognitionRunning = running;
--                if (!mFaceRecognitionRunning) {
--                    mFaceRecognizingHandler.removeCallbacksAndMessages(null);
--                }else{
--                    mFaceRecognizingHandler.postDelayed(() -> showFaceRecognizingMessage(), 100);
--                }
--            }
--        }
--
--        @Override
--        public void onBiometricAcquired(BiometricSourceType biometricSourceType,
--                int acquireInfo) {
--            if (biometricSourceType == BiometricSourceType.FACE) {
--                mFaceRecognitionRunning = true;
--                mFaceRecognizingHandler.postDelayed(() -> showFaceRecognizingMessage(), 100);
--                FaceUnlockImageView.setBouncerState(FaceUnlockImageView.State.SCANNING);
--            }
--        }
--
--        @Override
--        public void onBiometricHelp(int msgId, String helpString,
--                BiometricSourceType biometricSourceType) {
--            if (biometricSourceType == BiometricSourceType.FACE && mContext.getString(R.string.kg_face_not_recognized).equals(helpString)) {
--                FaceUnlockImageView.setBouncerState(FaceUnlockImageView.State.NOT_VERIFIED);
--            }
--        }
-     };
-     private Lazy<WindowManagerLockscreenVisibilityInteractor> mWmLockscreenVisibilityInteractor;
- 
-@@ -405,8 +367,7 @@ public class StatusBarKeyguardViewManager implements RemoteInputController.Callb
-             ActivityStarter activityStarter,
-             KeyguardTransitionInteractor keyguardTransitionInteractor,
-             @Main CoroutineDispatcher mainDispatcher,
--            Lazy<WindowManagerLockscreenVisibilityInteractor> wmLockscreenVisibilityInteractor,
--            @Main Handler faceRecognizingHandler
-+            Lazy<WindowManagerLockscreenVisibilityInteractor> wmLockscreenVisibilityInteractor
-     ) {
-         mContext = context;
-         mViewMediatorCallback = callback;
-@@ -439,7 +400,6 @@ public class StatusBarKeyguardViewManager implements RemoteInputController.Callb
-         mKeyguardTransitionInteractor = keyguardTransitionInteractor;
-         mMainDispatcher = mainDispatcher;
-         mWmLockscreenVisibilityInteractor = wmLockscreenVisibilityInteractor;
--        mFaceRecognizingHandler = faceRecognizingHandler;
-     }
- 
-     KeyguardTransitionInteractor mKeyguardTransitionInteractor;
-@@ -495,7 +455,6 @@ public class StatusBarKeyguardViewManager implements RemoteInputController.Callb
-         mKeyguardUpdateManager.registerCallback(mUpdateMonitorCallback);
-         mStatusBarStateController.addCallback(this);
-         mConfigurationController.addCallback(this);
--        FaceUnlockImageView.setConfigurationController(mConfigurationController);
-         mGesturalNav = QuickStepContract.isGesturalMode(
-                 mNavigationModeController.addListener(this));
-         if (mFoldAodAnimationController != null) {
-@@ -1407,13 +1366,6 @@ public class StatusBarKeyguardViewManager implements RemoteInputController.Callb
-         }
-     }
- 
--    private void showFaceRecognizingMessage(){
--        if (mFaceRecognitionRunning &&
--                mKeyguardUpdateManager.isUnlockWithFacePossible(mKeyguardUpdateManager.getCurrentUser())) {
--            setKeyguardMessage(mContext.getString(R.string.face_unlock_recognizing), null);
--        }
--    }
--
-     /** Display security message to relevant KeyguardMessageArea. */
-     public void setKeyguardMessage(String message, ColorStateList colorState) {
-         if (mAlternateBouncerInteractor.isVisibleState()) {
-@@ -1423,11 +1375,6 @@ public class StatusBarKeyguardViewManager implements RemoteInputController.Callb
-         } else {
-             mPrimaryBouncerInteractor.showMessage(message, colorState);
-         }
--        if (mContext.getString(R.string.face_unlock_recognizing).equals(message)) {
--            FaceUnlockImageView.setBouncerState(FaceUnlockImageView.State.SCANNING);
--        } else if (mContext.getString(R.string.kg_face_not_recognized).equals(message)) {
--            FaceUnlockImageView.setBouncerState(FaceUnlockImageView.State.NOT_VERIFIED);
--        }
-     }
- 
-     @Override
 diff --git a/services/core/Android.bp b/services/core/Android.bp
-index 9948cffa251e..49a640cdd44f 100644
+index d9e7383b6441..1664073a228a 100644
 --- a/services/core/Android.bp
 +++ b/services/core/Android.bp
-@@ -188,7 +188,6 @@ java_library_static {
-         "ImmutabilityAnnotation",
-         "securebox",
+@@ -206,7 +206,6 @@ java_library_static {
+         "com.android.server.utils_aconfig-java",
+         "service-jobscheduler-deviceidle.flags-aconfig-java",
          "vendor.aac.hardware.richtap.vibrator",
 -        "vendor.aospa.biometrics.face",
      ],
      javac_shard_size: 50,
      javacflags: [
 diff --git a/services/core/java/com/android/server/biometrics/sensors/face/FaceService.java b/services/core/java/com/android/server/biometrics/sensors/face/FaceService.java
-index ec8ffd96618d..6f26e7b3e4b4 100644
+index 79ad70987904..578d9dc2aede 100644
 --- a/services/core/java/com/android/server/biometrics/sensors/face/FaceService.java
 +++ b/services/core/java/com/android/server/biometrics/sensors/face/FaceService.java
 @@ -25,7 +25,6 @@ import android.annotation.Nullable;
@@ -1594,16 +1057,16 @@ index ec8ffd96618d..6f26e7b3e4b4 100644
  import android.hardware.face.FaceSensorPropertiesInternal;
  import android.hardware.face.FaceServiceReceiver;
  import android.hardware.face.IFaceAuthenticatorsRegisteredCallback;
-@@ -68,8 +66,6 @@ import com.android.server.biometrics.sensors.LockoutResetDispatcher;
+@@ -69,8 +67,6 @@ import com.android.server.biometrics.sensors.LockoutResetDispatcher;
  import com.android.server.biometrics.sensors.LockoutTracker;
  import com.android.server.biometrics.sensors.face.aidl.FaceProvider;
  import com.android.server.biometrics.sensors.face.hidl.Face10;
 -import com.android.server.biometrics.sensors.face.sense.SenseProvider;
 -import com.android.server.biometrics.sensors.face.sense.SenseUtils;
  
- import java.io.FileDescriptor;
- import java.io.PrintWriter;
-@@ -674,24 +670,6 @@ public class FaceService extends SystemService {
+ import com.google.android.collect.Lists;
+ 
+@@ -686,24 +682,6 @@ public class FaceService extends SystemService {
              return providers;
          }
  
@@ -1628,19 +1091,15 @@ index ec8ffd96618d..6f26e7b3e4b4 100644
          @android.annotation.EnforcePermission(android.Manifest.permission.USE_BIOMETRIC_INTERNAL)
          public void registerAuthenticators(
                  @NonNull List<FaceSensorPropertiesInternal> hidlSensors) {
-@@ -699,13 +677,12 @@ public class FaceService extends SystemService {
+@@ -720,11 +698,8 @@ public class FaceService extends SystemService {
+                         filteredInstances = filterAvailableHalInstances(hidlSensors, aidlSensors);
  
-             mRegistry.registerAll(() -> {
                  final List<ServiceProvider> providers = new ArrayList<>();
--                /*for (FaceSensorPropertiesInternal hidlSensor : hidlSensors) {
-+                for (FaceSensorPropertiesInternal hidlSensor : hidlSensors) {
-                     providers.add(
-                             Face10.newInstance(getContext(), mBiometricStateCallback,
-                                     hidlSensor, mLockoutResetDispatcher));
-                 }
--                providers.addAll(getAidlProviders());*/
+-                /*
+                 providers.addAll(getHidlProviders(filteredInstances.first));
+                 providers.addAll(getAidlProviders(filteredInstances.second));
+-                */
 -                providers.addAll(getSenseProviders());
-+                providers.addAll(getAidlProviders());
                  return providers;
              });
          }
@@ -1879,10 +1338,10 @@ index cdb4b46d0117..000000000000
 -}
 diff --git a/services/core/java/com/android/server/biometrics/sensors/face/sense/FaceAuthenticationClient.java b/services/core/java/com/android/server/biometrics/sensors/face/sense/FaceAuthenticationClient.java
 deleted file mode 100644
-index 9462c2ee4cb9..000000000000
+index 118970dcd14f..000000000000
 --- a/services/core/java/com/android/server/biometrics/sensors/face/sense/FaceAuthenticationClient.java
 +++ /dev/null
-@@ -1,229 +0,0 @@
+@@ -1,228 +0,0 @@
 -/*
 - * Copyright (C) 2020 The Android Open Source Project
 - * Copyright (C) 2023 Paranoid Android
@@ -2053,7 +1512,6 @@ index 9462c2ee4cb9..000000000000
 -    public void onAuthenticated(BiometricAuthenticator.Identifier identifier,
 -            boolean authenticated, ArrayList<Byte> token) {
 -        super.onAuthenticated(identifier, authenticated, token);
--        vibrateSuccess();
 -
 -        mState = STATE_STOPPED;
 -        mUsageStats.addEvent(new UsageStats.AuthenticationEvent(
@@ -3023,10 +2481,10 @@ index 08c075067082..000000000000
 -}
 diff --git a/services/core/java/com/android/server/biometrics/sensors/face/sense/SenseProvider.java b/services/core/java/com/android/server/biometrics/sensors/face/sense/SenseProvider.java
 deleted file mode 100644
-index 58a516937ab8..000000000000
+index a5c077b357c6..000000000000
 --- a/services/core/java/com/android/server/biometrics/sensors/face/sense/SenseProvider.java
 +++ /dev/null
-@@ -1,1101 +0,0 @@
+@@ -1,1107 +0,0 @@
 -/*
 - * Copyright (C) 2020 The Android Open Source Project
 - * Copyright (C) 2023 Paranoid Android
@@ -3092,7 +2550,7 @@ index 58a516937ab8..000000000000
 -import com.android.server.biometrics.sensors.AcquisitionClient;
 -import com.android.server.biometrics.sensors.AuthenticationConsumer;
 -import com.android.server.biometrics.sensors.BaseClientMonitor;
--import com.android.server.biometrics.sensors.BiometricNotificationImpl;
+-import com.android.server.biometrics.AuthenticationStatsBroadcastReceiver;
 -import com.android.server.biometrics.sensors.BiometricNotificationUtils;
 -import com.android.server.biometrics.sensors.BiometricScheduler;
 -import com.android.server.biometrics.sensors.BiometricStateCallback;
@@ -3158,7 +2616,7 @@ index 58a516937ab8..000000000000
 -    @Nullable private IBiometricsFace mDaemon;
 -    @NonNull private final HalResultController mHalResultController;
 -    @NonNull private final BiometricContext mBiometricContext;
--    @NonNull private final AuthenticationStatsCollector mAuthenticationStatsCollector;
+-    @Nullable private AuthenticationStatsCollector mAuthenticationStatsCollector;
 -    SparseArray<ISenseService> mServices;
 -    // for requests that do not use biometric prompt
 -    @NonNull private final AtomicLong mRequestCounter = new AtomicLong(0);
@@ -3400,8 +2858,14 @@ index 58a516937ab8..000000000000
 -        });
 -        mCurrentUserId = ActivityManager.getCurrentUser();
 -
--        mAuthenticationStatsCollector = new AuthenticationStatsCollector(mContext,
--                BiometricsProtoEnums.MODALITY_FACE, new BiometricNotificationImpl());
+-        AuthenticationStatsBroadcastReceiver mBroadcastReceiver =
+-                new AuthenticationStatsBroadcastReceiver(
+-                        mContext,
+-                        BiometricsProtoEnums.MODALITY_FACE,
+-                        (AuthenticationStatsCollector collector) -> {
+-                            Slog.d(TAG, "Initializing AuthenticationStatsCollector");
+-                            mAuthenticationStatsCollector = collector;
+-                        });
 -
 -        try {
 -            ActivityManager.getService().registerUserSwitchObserver(mUserSwitchObserver, TAG);
@@ -4346,67 +3810,3 @@ index 0499bc51ede6..000000000000
 -    }
 -
 -}
-diff --git a/services/core/java/com/android/server/crdroid/CustomDeviceConfigService.java b/services/core/java/com/android/server/crdroid/CustomDeviceConfigService.java
-deleted file mode 100644
-index 8d8d18f188af..000000000000
---- a/services/core/java/com/android/server/crdroid/CustomDeviceConfigService.java
-+++ /dev/null
-@@ -1,34 +0,0 @@
--/*
-- * Copyright (C) 2023 The PixelExperience Project
-- * SPDX-License-Identifier: Apache-2.0
-- */
--
--package com.android.server.crdroid;
--
--import android.content.Context;
--import com.android.server.SystemService;
--
--import com.android.internal.util.crdroid.DeviceConfigUtils;
--
--public class CustomDeviceConfigService extends SystemService {
--
--    private static final String TAG = "CustomDeviceConfigService";
--
--    private final Context mContext;
--
--    public CustomDeviceConfigService(Context context) {
--        super(context);
--        mContext = context;
--    }
--
--    @Override
--    public void onStart() {
--    }
--
--    @Override
--    public void onBootPhase(int phase) {
--        if (phase == PHASE_BOOT_COMPLETED) {
--            DeviceConfigUtils.setDefaultProperties(null, null);
--        }
--    }
--}
-diff --git a/services/java/com/android/server/SystemServer.java b/services/java/com/android/server/SystemServer.java
-index 50284e2f90a2..cc883c77cd63 100644
---- a/services/java/com/android/server/SystemServer.java
-+++ b/services/java/com/android/server/SystemServer.java
-@@ -127,7 +127,6 @@ import com.android.server.connectivity.PacProxyService;
- import com.android.server.contentcapture.ContentCaptureManagerInternal;
- import com.android.server.coverage.CoverageService;
- import com.android.server.cpu.CpuMonitorService;
--import com.android.server.crdroid.CustomDeviceConfigService;
- import com.android.server.devicepolicy.DevicePolicyManagerService;
- import com.android.server.devicestate.DeviceStateManagerService;
- import com.android.server.display.AutoAODService;
-@@ -2616,11 +2615,6 @@ public final class SystemServer implements Dumpable {
-             mSystemServiceManager.startService(BackgroundInstallControlService.class);
-             t.traceEnd();
- 
--            // CustomDeviceConfigService
--            t.traceBegin("StartCustomDeviceConfigService");
--            mSystemServiceManager.startService(CustomDeviceConfigService.class);
--            t.traceEnd();
--
-             if (context.getResources().getBoolean(
-                     com.android.internal.R.bool.config_mockOplusLinearmotorVibratorService)) {
-                 t.traceBegin("StartLinearmotorVibratorService");
