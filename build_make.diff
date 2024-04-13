@@ -1,8 +1,8 @@
 diff --git a/envsetup.sh b/envsetup.sh
-index 03ef64e95f..b189c50772 100644
+index e0b6b96617..55fa751ed4 100644
 --- a/envsetup.sh
 +++ b/envsetup.sh
-@@ -769,17 +769,17 @@ function lunch()
+@@ -831,17 +831,17 @@ function lunch()
  
      if ! check_product $product $release
      then
@@ -31,23 +31,30 @@ index 03ef64e95f..b189c50772 100644
      fi
  
      TARGET_PRODUCT=$product \
-@@ -2002,22 +2002,6 @@ validate_current_shell
+@@ -2116,29 +2116,6 @@ set_global_paths
  source_vendorsetup
  addcompletions
  
 -# check and set ccache path on envsetup
--if [ -z ${CCACHE_EXEC} ]; then
--    ccache_path=$(which ccache)
--    if [ ! -z "$ccache_path" ]; then
+-if [ -z "${CCACHE_EXEC}" ]; then
+-    if command -v ccache &>/dev/null; then
 -        export USE_CCACHE=1
--        export CCACHE_EXEC="$ccache_path"
--        if [ -z ${CCACHE_DIR} ]; then
--            export CCACHE_DIR=${HOME}/.ccache
+-        export CCACHE_EXEC=$(command -v ccache)
+-        [ -z "${CCACHE_DIR}" ] && export CCACHE_DIR="$HOME/.ccache"
+-        echo "ccache directory found, CCACHE_DIR set to: $CCACHE_DIR" >&2
+-        CCACHE_MAXSIZE="${CCACHE_MAXSIZE:-40G}"
+-        DIRECT_MODE="${DIRECT_MODE:-false}"
+-        $CCACHE_EXEC -o compression=true -o direct_mode="${DIRECT_MODE}" -M "${CCACHE_MAXSIZE}" \
+-            && echo "ccache enabled, CCACHE_EXEC set to: $CCACHE_EXEC, CCACHE_MAXSIZE set to: $CCACHE_MAXSIZE, direct_mode set to: $DIRECT_MODE" >&2 \
+-            || echo "Warning: Could not set cache size limit. Please check ccache configuration." >&2
+-        CURRENT_CCACHE_SIZE=$(du -sh "$CCACHE_DIR" 2>/dev/null | cut -f1)
+-        if [ -n "$CURRENT_CCACHE_SIZE" ]; then
+-            echo "Current ccache size is: $CURRENT_CCACHE_SIZE" >&2
+-        else
+-            echo "No cached files in ccache." >&2
 -        fi
--        $ccache_path -o compression=true
--        echo -e "ccache enabled and CCACHE_EXEC has been set to : $ccache_path"
 -    else
--        echo -e "ccache not found installed!"
+-        echo "Error: ccache not found. Please install ccache." >&2
 -    fi
 -fi
 -
@@ -55,10 +62,10 @@ index 03ef64e95f..b189c50772 100644
  
  . $ANDROID_BUILD_TOP/vendor/lineage/build/envsetup.sh
 diff --git a/tools/releasetools/non_ab_ota.py b/tools/releasetools/non_ab_ota.py
-index eb9ea9f375..3cb40181cd 100644
+index 9c6f626ab2..84d3740c10 100644
 --- a/tools/releasetools/non_ab_ota.py
 +++ b/tools/releasetools/non_ab_ota.py
-@@ -222,19 +222,13 @@ else if get_stage("%(bcb_dev)s") == "3/3" then
+@@ -215,19 +215,13 @@ else if get_stage("%(bcb_dev)s") == "3/3" then
    script.Print("Target: {}".format(target_info.fingerprint))
  
    # Build info
@@ -85,7 +92,7 @@ index eb9ea9f375..3cb40181cd 100644
  
    buildid = target_info.GetBuildProp("ro.modversion")
    androidver = target_info.GetBuildProp("ro.build.version.release")
-@@ -244,7 +238,7 @@ else if get_stage("%(bcb_dev)s") == "3/3" then
+@@ -237,7 +231,7 @@ else if get_stage("%(bcb_dev)s") == "3/3" then
    device = target_info.GetBuildProp("ro.build.product")
    manufacturer = target_info.GetBuildProp("ro.product.manufacturer")
    script.Print("***********************************************");

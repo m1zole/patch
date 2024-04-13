@@ -390,8 +390,8 @@ diff --git a/config/crdroid.mk b/config/crdroid.mk
 index 9291a22e..60b0f0f7 100644
 --- a/config/crdroid.mk
 +++ b/config/crdroid.mk
-@@ -31,13 +31,13 @@ PRODUCT_PRODUCT_PROPERTIES += \
-     ro.input.video_enabled=false
+@@ -34,13 +34,13 @@ PRODUCT_PRODUCT_PROPERTIES += \
+     sys.fflag.override.settings_enable_monitor_phantom_procs=false
  
  # Blurs
 -ifeq ($(TARGET_ENABLE_BLUR), true)
@@ -408,7 +408,7 @@ index 9291a22e..60b0f0f7 100644
  endif
  
  # Cloned app exemption
-@@ -68,14 +68,3 @@ PRODUCT_PACKAGES += \
+@@ -71,14 +71,3 @@ PRODUCT_PACKAGES += \
      MatLog \
      OmniJaws \
      OmniStyle
@@ -449,7 +449,7 @@ index fc41773d..00000000
 -PRODUCT_VERSION_MINOR = 0
 -
 -# Increase CR Version with each major release.
--CR_VERSION := 10.3-BETA
+-CR_VERSION := 10.4
 -
 -# Internal version
 -LINEAGE_VERSION := crDroidAndroid-$(PRODUCT_VERSION_MAJOR).$(PRODUCT_VERSION_MINOR)-$(shell date +%Y%m%d)-$(LINEAGE_BUILD)-v$(CR_VERSION)
