@@ -131,6 +131,149 @@ index f32dc19c986c..2162e3a77f15 100644
          return app;
      }
  
+diff --git a/core/java/android/provider/Settings.java b/core/java/android/provider/Settings.java
+index f6e2fbaa6b2e..4dd355435ecd 100644
+--- a/core/java/android/provider/Settings.java
++++ b/core/java/android/provider/Settings.java
+@@ -118,8 +118,6 @@ import java.util.Set;
+ import java.util.concurrent.Executor;
+ import java.util.function.Consumer;
+ 
+-import com.android.internal.util.crdroid.DeviceConfigUtils;
+-
+ /**
+  * The Settings provider contains global system-level device preferences.
+  */
+@@ -20948,9 +20946,6 @@ public final class Settings {
+         @RequiresPermission(Manifest.permission.WRITE_DEVICE_CONFIG)
+         public static boolean putString(@NonNull String namespace,
+                 @NonNull String name, @Nullable String value, boolean makeDefault) {
+-            if (DeviceConfigUtils.shouldDenyDeviceConfigControl(namespace, name)) {
+-                return true;
+-            }
+             ContentResolver resolver = getContentResolver();
+             return sNameValueCache.putStringForUser(resolver, createCompositeName(namespace, name),
+                     value, null, makeDefault, resolver.getUserId(),
+@@ -20972,9 +20967,7 @@ public final class Settings {
+         public static boolean setStrings(@NonNull String namespace,
+                 @NonNull Map<String, String> keyValues)
+                 throws DeviceConfig.BadConfigException {
+-            boolean result = setStrings(getContentResolver(), namespace, keyValues);
+-            DeviceConfigUtils.setDefaultProperties(namespace, null);
+-            return result;
++            return setStrings(getContentResolver(), namespace, keyValues);
+         }
+ 
+         /**
+@@ -21024,9 +21017,6 @@ public final class Settings {
+         @RequiresPermission(Manifest.permission.WRITE_DEVICE_CONFIG)
+         public static boolean deleteString(@NonNull String namespace,
+                 @NonNull String name) {
+-            if (DeviceConfigUtils.shouldDenyDeviceConfigControl(namespace, name)) {
+-                return true;
+-            }
+             ContentResolver resolver = getContentResolver();
+             return sNameValueCache.deleteStringForUser(resolver,
+                     createCompositeName(namespace, name), resolver.getUserId());
+@@ -21063,7 +21053,6 @@ public final class Settings {
+             } catch (RemoteException e) {
+                 Log.w(TAG, "Can't reset to defaults for " + CONTENT_URI, e);
+             }
+-            DeviceConfigUtils.setDefaultProperties(null, null);
+         }
+ 
+         /**
+diff --git a/core/java/com/android/internal/util/crdroid/DeviceConfigUtils.java b/core/java/com/android/internal/util/crdroid/DeviceConfigUtils.java
+deleted file mode 100644
+index 115c5199def8..000000000000
+--- a/core/java/com/android/internal/util/crdroid/DeviceConfigUtils.java
++++ /dev/null
+@@ -1,85 +0,0 @@
+-/*
+- * Copyright (C) 2023 The Pixel Experience Project
+- *
+- * Licensed under the Apache License, Version 2.0 (the "License");
+- * you may not use this file except in compliance with the License.
+- * You may obtain a copy of the License at
+- *
+- * http://www.apache.org/licenses/LICENSE-2.0
+- *
+- * Unless required by applicable law or agreed to in writing, software
+- * distributed under the License is distributed on an "AS IS" BASIS,
+- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+- * See the License for the specific language governing permissions and
+- * limitations under the License.
+- */
+-
+-package com.android.internal.util.crdroid;
+-
+-import android.content.res.Resources;
+-import android.provider.Settings;
+-import android.util.Log;
+-import java.util.Arrays;
+-import java.util.HashMap;
+-import java.util.Map;
+-import java.util.Set;
+-
+-import com.android.internal.util.ArrayUtils;
+-
+-public class DeviceConfigUtils {
+-
+-    private static final String TAG = DeviceConfigUtils.class.getSimpleName();
+-
+-    private static final boolean DEBUG = false;
+-
+-    private static String[] getDeviceConfigsOverride() {
+-        String[] globalDeviceConfigs =
+-            Resources.getSystem().getStringArray(com.android.internal.R.array.global_device_configs_override);
+-        String[] deviceConfigs =
+-            Resources.getSystem().getStringArray(com.android.internal.R.array.device_configs_override);
+-        String[] allDeviceConfigs = Arrays.copyOf(globalDeviceConfigs, globalDeviceConfigs.length + deviceConfigs.length);
+-        System.arraycopy(deviceConfigs, 0, allDeviceConfigs, globalDeviceConfigs.length, deviceConfigs.length);
+-        return allDeviceConfigs;
+-    }
+-
+-    public static boolean shouldDenyDeviceConfigControl(String namespace, String property) {
+-        if (DEBUG) Log.d(TAG, "shouldAllowDeviceConfigControl, namespace=" + namespace + ", property=" + property);
+-        for (String p : getDeviceConfigsOverride()) {
+-            String[] kv = p.split("=");
+-            String fullKey = kv[0];
+-            String[] nsKey = fullKey.split("/");
+-            if (nsKey[0] == namespace && nsKey[1] == property){
+-                if (DEBUG) Log.d(TAG, "shouldAllowDeviceConfigControl, deny, namespace=" + namespace + ", property=" + property);
+-                return true;
+-            }
+-        }
+-        if (DEBUG) Log.d(TAG, "shouldAllowDeviceConfigControl, allow, namespace=" + namespace + ", property=" + property);
+-        return false;
+-    }
+-
+-    public static void setDefaultProperties(String filterNamespace, String filterProperty) {
+-        if (DEBUG) Log.d(TAG, "setDefaultProperties");
+-        for (String p : getDeviceConfigsOverride()) {
+-            String[] kv = p.split("=");
+-            String fullKey = kv[0];
+-            String[] nsKey = fullKey.split("/");
+-
+-            String namespace = nsKey[0];
+-            String key = nsKey[1];
+-
+-            if (filterNamespace != null && filterNamespace == namespace){
+-                continue;
+-            }
+-
+-            if (filterProperty != null && filterProperty == key){
+-                continue;
+-            }
+-
+-            String value = "";
+-            if (kv.length > 1) {
+-                value = kv[1];
+-            }
+-            Settings.Config.putString(namespace, key, value, false);
+-        }
+-    }
+-}
 diff --git a/core/java/com/android/internal/util/crdroid/PixelPropsUtils.java b/core/java/com/android/internal/util/crdroid/PixelPropsUtils.java
 deleted file mode 100644
 index 67f65e86bce4..000000000000
@@ -568,6 +711,42 @@ index 67f65e86bce4..000000000000
 -        }
 -    }
 -}
+diff --git a/core/res/res/values/cr_config.xml b/core/res/res/values/cr_config.xml
+index 000849d80214..0957d97769ed 100644
+--- a/core/res/res/values/cr_config.xml
++++ b/core/res/res/values/cr_config.xml
+@@ -126,13 +126,7 @@
+     <!-- Whether to use Richtap vibration -->
+     <bool name="config_usesRichtapVibration">false</bool>
+ 
+-    <!-- Define device configs on boot -->
+-    <string-array name="global_device_configs_override" translatable="false">
+-    </string-array>
+-    <string-array name="device_configs_override" translatable="false">
+-    </string-array>
+-
+-  <!-- List of system apps that are allowed to be locked with app lock.
+-        Use with extreme caution. -->
+-  <string-array name="config_appLockAllowedSystemApps" translatable="false" />
++  	<!-- List of system apps that are allowed to be locked with app lock.
++  		 Use with extreme caution. -->
++  	<string-array name="config_appLockAllowedSystemApps" translatable="false" />
+ </resources>
+diff --git a/core/res/res/values/cr_symbols.xml b/core/res/res/values/cr_symbols.xml
+index b549dc0c0329..1ed08c0c5383 100644
+--- a/core/res/res/values/cr_symbols.xml
++++ b/core/res/res/values/cr_symbols.xml
+@@ -96,10 +96,6 @@
+     <!-- Whether to use Richtap vibration -->
+     <java-symbol type="bool" name="config_usesRichtapVibration" />
+ 
+-    <!-- Define device configs on boot -->
+-    <java-symbol type="array" name="global_device_configs_override" />
+-    <java-symbol type="array" name="device_configs_override" />
+-
+     <!-- App lock -->
+     <java-symbol type="string" name="unlock_application" />
+     <java-symbol type="array" name="config_appLockAllowedSystemApps" />
 diff --git a/keystore/java/android/security/keystore2/AndroidKeyStoreSpi.java b/keystore/java/android/security/keystore2/AndroidKeyStoreSpi.java
 index 4e594d3e57b2..9058cb510f6c 100644
 --- a/keystore/java/android/security/keystore2/AndroidKeyStoreSpi.java
@@ -673,10 +852,10 @@ index 6e6a2881ffbe..6d7ce0623817 100644
              android:id="@id/keyguard_indication_text"
              android:layout_width="match_parent"
 diff --git a/packages/SystemUI/res/values/cr_strings.xml b/packages/SystemUI/res/values/cr_strings.xml
-index da6a1389881b..0981f28c17a4 100644
+index dcddf4dbe90b..810a5849ca49 100644
 --- a/packages/SystemUI/res/values/cr_strings.xml
 +++ b/packages/SystemUI/res/values/cr_strings.xml
-@@ -189,7 +189,4 @@
+@@ -171,7 +171,4 @@
      <!-- Island notification -->
      <string name="now_playing_on">Now Playing on %1$s</string>
      <string name="by_artist">%1$s by %2$s</string>
@@ -684,6 +863,58 @@ index da6a1389881b..0981f28c17a4 100644
 -    <!-- Text while recognizing face -->
 -    <string name="face_unlock_recognizing">Recognizing face...</string>
  </resources>
+diff --git a/packages/SystemUI/src/com/android/systemui/biometrics/data/repository/PromptRepository.kt b/packages/SystemUI/src/com/android/systemui/biometrics/data/repository/PromptRepository.kt
+index cf2f899b80f0..b35fbbc7bb32 100644
+--- a/packages/SystemUI/src/com/android/systemui/biometrics/data/repository/PromptRepository.kt
++++ b/packages/SystemUI/src/com/android/systemui/biometrics/data/repository/PromptRepository.kt
+@@ -110,9 +110,17 @@ constructor(
+ 
+     private val _faceSettings =
+         _userId.map { id -> faceSettings.forUser(id) }.distinctUntilChanged()
++    private val _faceSettingAlwaysRequireConfirmation =
++        _faceSettings.flatMapLatest { it.alwaysRequireConfirmationInApps }.distinctUntilChanged()
+ 
++    private val _isConfirmationRequired = _promptInfo.map { it?.isConfirmationRequested ?: false }
+     override val isConfirmationRequired =
+-        _faceSettings.flatMapLatest { it.alwaysRequireConfirmationInApps }.distinctUntilChanged()
++        combine(_isConfirmationRequired, _faceSettingAlwaysRequireConfirmation) {
++                appRequiresConfirmation,
++                forceRequireConfirmation ->
++                forceRequireConfirmation || appRequiresConfirmation
++            }
++            .distinctUntilChanged()
+ 
+     override fun setPrompt(
+         promptInfo: PromptInfo,
+diff --git a/packages/SystemUI/src/com/android/systemui/biometrics/ui/viewmodel/PromptViewModel.kt b/packages/SystemUI/src/com/android/systemui/biometrics/ui/viewmodel/PromptViewModel.kt
+index ea50d01127c2..6d0a58e202bd 100644
+--- a/packages/SystemUI/src/com/android/systemui/biometrics/ui/viewmodel/PromptViewModel.kt
++++ b/packages/SystemUI/src/com/android/systemui/biometrics/ui/viewmodel/PromptViewModel.kt
+@@ -155,7 +155,10 @@ constructor(
+      * If the API caller or the user's personal preferences require explicit confirmation after
+      * successful authentication. Confirmation always required when in explicit flow.
+      */
+-    val isConfirmationRequired: Flow<Boolean> = promptSelectorInteractor.isConfirmationRequired
++    val isConfirmationRequired: Flow<Boolean> =
++        combine(_isOverlayTouched, size) { isOverlayTouched, size ->
++            !isOverlayTouched && size.isNotSmall
++        }
+ 
+     /**
+      * When fingerprint and face modalities are enrolled, indicates whether only face auth has
+@@ -473,9 +476,11 @@ constructor(
+     }
+ 
+     private suspend fun needsExplicitConfirmation(modality: BiometricModality): Boolean {
++        val confirmationRequired = isConfirmationRequired.first()
++
+         // Only worry about confirmationRequired if face was used to unlock
+         if (modality == BiometricModality.Face) {
+-            return isConfirmationRequired.first()
++            return confirmationRequired
+         }
+         // fingerprint only never requires confirmation
+         return false
 diff --git a/packages/SystemUI/src/com/android/systemui/privacy/AppOpsPrivacyItemMonitor.kt b/packages/SystemUI/src/com/android/systemui/privacy/AppOpsPrivacyItemMonitor.kt
 index cc4ce05a4282..fedbdec113f8 100644
 --- a/packages/SystemUI/src/com/android/systemui/privacy/AppOpsPrivacyItemMonitor.kt
@@ -1025,6 +1256,34 @@ index 866bc590d33f..a3d316b611a7 100644
          pw.println("  canBypass: ${canBypass()}")
          pw.println("  bouncerShowing: $bouncerShowing")
          pw.println("  altBouncerShowing: $altBouncerShowing")
+diff --git a/services/applock/java/com/android/server/app/BiometricUnlocker.kt b/services/applock/java/com/android/server/app/BiometricUnlocker.kt
+index 484fd9352d03..0e3f774975a0 100644
+--- a/services/applock/java/com/android/server/app/BiometricUnlocker.kt
++++ b/services/applock/java/com/android/server/app/BiometricUnlocker.kt
+@@ -46,7 +46,7 @@ internal class BiometricUnlocker(private val context: Context) {
+      */
+     fun canUnlock(): Boolean =
+         biometricManager.canAuthenticate(
+-            Authenticators.BIOMETRIC_WEAK or
++            Authenticators.BIOMETRIC_STRONG or
+                 Authenticators.DEVICE_CREDENTIAL
+         ) == BiometricManager.BIOMETRIC_SUCCESS
+ 
+@@ -91,13 +91,12 @@ internal class BiometricUnlocker(private val context: Context) {
+     ) {
+         var authenticators = Authenticators.DEVICE_CREDENTIAL
+         if (biometricsAllowed) {
+-            authenticators = authenticators or Authenticators.BIOMETRIC_WEAK
++            authenticators = authenticators or Authenticators.BIOMETRIC_STRONG
+         }
+         val prompt = BiometricPrompt.Builder(context)
+             .setTitle(title)
+             .setAllowedAuthenticators(authenticators)
+             .setAllowBackgroundAuthentication(true)
+-            .setConfirmationRequired(false)
+             .build()
+         prompt.authenticateUser(
+             CancellationSignal(),
 diff --git a/services/core/Android.bp b/services/core/Android.bp
 index d9e7383b6441..1664073a228a 100644
 --- a/services/core/Android.bp
@@ -3810,3 +4069,67 @@ index 0499bc51ede6..000000000000
 -    }
 -
 -}
+diff --git a/services/core/java/com/android/server/crdroid/CustomDeviceConfigService.java b/services/core/java/com/android/server/crdroid/CustomDeviceConfigService.java
+deleted file mode 100644
+index 8d8d18f188af..000000000000
+--- a/services/core/java/com/android/server/crdroid/CustomDeviceConfigService.java
++++ /dev/null
+@@ -1,34 +0,0 @@
+-/*
+- * Copyright (C) 2023 The PixelExperience Project
+- * SPDX-License-Identifier: Apache-2.0
+- */
+-
+-package com.android.server.crdroid;
+-
+-import android.content.Context;
+-import com.android.server.SystemService;
+-
+-import com.android.internal.util.crdroid.DeviceConfigUtils;
+-
+-public class CustomDeviceConfigService extends SystemService {
+-
+-    private static final String TAG = "CustomDeviceConfigService";
+-
+-    private final Context mContext;
+-
+-    public CustomDeviceConfigService(Context context) {
+-        super(context);
+-        mContext = context;
+-    }
+-
+-    @Override
+-    public void onStart() {
+-    }
+-
+-    @Override
+-    public void onBootPhase(int phase) {
+-        if (phase == PHASE_BOOT_COMPLETED) {
+-            DeviceConfigUtils.setDefaultProperties(null, null);
+-        }
+-    }
+-}
+diff --git a/services/java/com/android/server/SystemServer.java b/services/java/com/android/server/SystemServer.java
+index 8dacbd252ecb..185b83d7001c 100644
+--- a/services/java/com/android/server/SystemServer.java
++++ b/services/java/com/android/server/SystemServer.java
+@@ -129,7 +129,6 @@ import com.android.server.connectivity.PacProxyService;
+ import com.android.server.contentcapture.ContentCaptureManagerInternal;
+ import com.android.server.coverage.CoverageService;
+ import com.android.server.cpu.CpuMonitorService;
+-import com.android.server.crdroid.CustomDeviceConfigService;
+ import com.android.server.criticalevents.CriticalEventLog;
+ import com.android.server.devicepolicy.DevicePolicyManagerService;
+ import com.android.server.devicestate.DeviceStateManagerService;
+@@ -2666,11 +2665,6 @@ public final class SystemServer implements Dumpable {
+             mSystemServiceManager.startService(BackgroundInstallControlService.class);
+             t.traceEnd();
+ 
+-            // CustomDeviceConfigService
+-            t.traceBegin("StartCustomDeviceConfigService");
+-            mSystemServiceManager.startService(CustomDeviceConfigService.class);
+-            t.traceEnd();
+-
+             if (context.getResources().getBoolean(
+                     com.android.internal.R.bool.config_mockOplusLinearmotorVibratorService)) {
+                 t.traceBegin("StartLinearmotorVibratorService");

@@ -320,7 +320,7 @@ index 066ec4c..b32ad73 100644
                  if (!mCancelled) {
                      switch (jobType) {
 -                        case JOB_TYPE_CRDROID:
-+                        case JOB_TYPE_LINEAGE:
++                        case JOB_TYPE_LINEAGEORG:
                              try {
                                  JSONObject json = buildStatsRequest(deviceId, deviceName,
 -                                        deviceCrVersion, deviceBuildDate, deviceAndroidVersion,

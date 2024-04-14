@@ -349,32 +349,15 @@ diff --git a/config/common.mk b/config/common.mk
 index de94fbac..b732309f 100644
 --- a/config/common.mk
 +++ b/config/common.mk
-@@ -3,7 +3,7 @@ $(call inherit-product-if-exists, vendor/extra/product.mk)
- $(call inherit-product-if-exists, vendor/lineage/config/crdroid.mk)
+@@ -4,7 +4,7 @@ $(call inherit-product-if-exists, vendor/lineage/config/crdroid.mk)
  $(call inherit-product-if-exists, vendor/addons/config.mk)
+ $(call inherit-product-if-exists, vendor/pixel-framework/config.mk)
  
 -PRODUCT_BRAND ?= crDroidAndroid
 +PRODUCT_BRAND ?= Floko
  
  PRODUCT_BUILD_PROP_OVERRIDES += BUILD_UTC_DATE=0
  
-@@ -120,15 +120,7 @@ PRODUCT_PACKAGES += \
-     Jelly
- endif
- 
--ifeq ($(PRODUCT_IS_AUTOMOTIVE),)
--PRODUCT_PACKAGES += \
--    LineageParts \
--    LineageSetupWizard
--endif
--
--PRODUCT_PACKAGES += \
--    LineageSettingsProvider \
--    Updater
-+PRODUCT_PACKAGES += LineageSettingsProvider
- 
- PRODUCT_COPY_FILES += \
-     vendor/lineage/prebuilt/common/etc/init/init.lineage-updater.rc:$(TARGET_COPY_OUT_SYSTEM_EXT)/etc/init/init.lineage-updater.rc
 @@ -246,9 +238,7 @@ PRODUCT_PACKAGE_OVERLAYS += vendor/crowdin/overlay
  PRODUCT_EXTRA_RECOVERY_KEYS += \
      vendor/lineage/build/target/product/security/lineage
@@ -390,24 +373,6 @@ diff --git a/config/crdroid.mk b/config/crdroid.mk
 index 9291a22e..60b0f0f7 100644
 --- a/config/crdroid.mk
 +++ b/config/crdroid.mk
-@@ -34,13 +34,13 @@ PRODUCT_PRODUCT_PROPERTIES += \
-     sys.fflag.override.settings_enable_monitor_phantom_procs=false
- 
- # Blurs
--ifeq ($(TARGET_ENABLE_BLUR), true)
-+ifeq ($(TARGET_DISABLE_BLUR), true)
- PRODUCT_SYSTEM_EXT_PROPERTIES += \
--    ro.sf.blurs_are_expensive=1 \
--    ro.surface_flinger.supports_background_blur=1
-+	ro.launcher.blur.appLaunch=0
- else
- PRODUCT_PRODUCT_PROPERTIES += \
--    ro.launcher.blur.appLaunch=0
-+    ro.sf.blurs_are_expensive=1 \
-+    ro.surface_flinger.supports_background_blur=1
- endif
- 
- # Cloned app exemption
 @@ -71,14 +71,3 @@ PRODUCT_PACKAGES += \
      MatLog \
      OmniJaws \
