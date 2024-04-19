@@ -712,10 +712,10 @@ index 67f65e86bce4..000000000000
 -    }
 -}
 diff --git a/core/res/res/values/cr_config.xml b/core/res/res/values/cr_config.xml
-index 000849d80214..0957d97769ed 100644
+index 000849d80214..aa1eb2a7c6fa 100644
 --- a/core/res/res/values/cr_config.xml
 +++ b/core/res/res/values/cr_config.xml
-@@ -126,13 +126,7 @@
+@@ -126,12 +126,6 @@
      <!-- Whether to use Richtap vibration -->
      <bool name="config_usesRichtapVibration">false</bool>
  
@@ -725,13 +725,9 @@ index 000849d80214..0957d97769ed 100644
 -    <string-array name="device_configs_override" translatable="false">
 -    </string-array>
 -
--  <!-- List of system apps that are allowed to be locked with app lock.
--        Use with extreme caution. -->
--  <string-array name="config_appLockAllowedSystemApps" translatable="false" />
-+  	<!-- List of system apps that are allowed to be locked with app lock.
-+  		 Use with extreme caution. -->
-+  	<string-array name="config_appLockAllowedSystemApps" translatable="false" />
- </resources>
+   <!-- List of system apps that are allowed to be locked with app lock.
+         Use with extreme caution. -->
+   <string-array name="config_appLockAllowedSystemApps" translatable="false" />
 diff --git a/core/res/res/values/cr_symbols.xml b/core/res/res/values/cr_symbols.xml
 index b549dc0c0329..1ed08c0c5383 100644
 --- a/core/res/res/values/cr_symbols.xml
