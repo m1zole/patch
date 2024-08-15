@@ -1,12 +1,14 @@
 diff --git a/core/java/android/app/ApplicationPackageManager.java b/core/java/android/app/ApplicationPackageManager.java
-index e0622fa96e12..bdba41c1fccb 100644
+index 76aca30b09f0..bdba41c1fccb 100644
 --- a/core/java/android/app/ApplicationPackageManager.java
 +++ b/core/java/android/app/ApplicationPackageManager.java
-@@ -818,95 +818,8 @@ public class ApplicationPackageManager extends PackageManager {
+@@ -818,97 +818,8 @@ public class ApplicationPackageManager extends PackageManager {
                  }
              };
  
 -    private static final String[] pTensorCodenames = {
+-            "husky",
+-            "shiba",
 -            "felix",
 -            "tangorpro",
 -            "lynx",
@@ -22,6 +24,7 @@ index e0622fa96e12..bdba41c1fccb 100644
 -            "com.google.android.apps.photos.PIXEL_2019_MIDYEAR_PRELOAD",
 -            "com.google.android.apps.photos.PIXEL_2018_PRELOAD",
 -            "com.google.android.apps.photos.PIXEL_2017_PRELOAD",
+-            "com.google.android.feature.PIXEL_2021_MIDYEAR_EXPERIENCE",
 -            "com.google.android.feature.PIXEL_2020_EXPERIENCE",
 -            "com.google.android.feature.PIXEL_2020_MIDYEAR_EXPERIENCE",
 -            "com.google.android.feature.PIXEL_2019_EXPERIENCE",
@@ -51,18 +54,16 @@ index e0622fa96e12..bdba41c1fccb 100644
 -            "com.google.android.apps.dialer.SUPPORTED"
 -    };
 -
--    private static final String[] featuresP23 = {
+-    private static final String[] featuresTensor = {
+-            "com.google.android.feature.PIXEL_2025_EXPERIENCE",
+-            "com.google.android.feature.PIXEL_2025_MIDYEAR_EXPERIENCE",
 -            "com.google.android.feature.PIXEL_2024_EXPERIENCE",
 -            "com.google.android.feature.PIXEL_2024_MIDYEAR_EXPERIENCE",
 -            "com.google.android.feature.PIXEL_2023_EXPERIENCE",
--            "com.google.android.feature.PIXEL_2023_MIDYEAR_EXPERIENCE"
--    };
--
--    private static final String[] featuresTensor = {
+-            "com.google.android.feature.PIXEL_2023_MIDYEAR_EXPERIENCE",
 -            "com.google.android.feature.PIXEL_2022_EXPERIENCE",
 -            "com.google.android.feature.PIXEL_2022_MIDYEAR_EXPERIENCE",
--            "com.google.android.feature.PIXEL_2021_EXPERIENCE",
--            "com.google.android.feature.PIXEL_2021_MIDYEAR_EXPERIENCE"
+-            "com.google.android.feature.PIXEL_2021_EXPERIENCE"
 -    };
 -
 -    private static final String[] featuresNexus = {
@@ -76,22 +77,23 @@ index e0622fa96e12..bdba41c1fccb 100644
      @Override
      public boolean hasSystemFeature(String name, int version) {
 -        String packageName = ActivityThread.currentPackageName();
--        if (packageName != null &&
--                packageName.equals("com.google.android.apps.photos") &&
--                SystemProperties.getBoolean("persist.sys.pixelprops.gphotos", true)) {
--            if (Arrays.asList(featuresPixel).contains(name)) return false;
+-        if (packageName != null
+-                && packageName.equals("com.google.android.googlequicksearchbox")) {
+-            if (Arrays.asList(featuresPixel).contains(name)) return true;
 -            if (Arrays.asList(featuresPixelOthers).contains(name)) return true;
--            if (Arrays.asList(featuresP23).contains(name)) return false;
--            if (Arrays.asList(featuresTensor).contains(name)) return false;
+-            if (Arrays.asList(featuresTensor).contains(name)) return true;
 -            if (Arrays.asList(featuresNexus).contains(name)) return true;
 -        }
--        if (Arrays.asList(featuresTensor).contains(name) &&
--                !Arrays.asList(pTensorCodenames).contains(SystemProperties.get("ro.product.device"))) {
+-        if (packageName != null && Arrays.asList(featuresTensor).contains(name)
+-                && !Arrays.asList(pTensorCodenames).contains(SystemProperties.get("ro.product.device"))) {
 -            return false;
--        } else if (packageName != null && Arrays.asList(featuresTensor).contains(name)) {
--            if (packageName.contains("com.google.android.apps.nexuslauncher")) {
--                return false;
--            }
+-        }
+-        if (packageName != null
+-                && packageName.equals("com.google.android.apps.photos")
+-                && SystemProperties.getBoolean("persist.sys.pixelprops.gphotos", true)) {
+-            if (Arrays.asList(featuresPixel).contains(name)) return false;
+-            if (Arrays.asList(featuresPixelOthers).contains(name)) return true;
+-            if (Arrays.asList(featuresNexus).contains(name)) return true;
 -        }
 -        if (Arrays.asList(featuresPixel).contains(name)) return true;
 -        if (Arrays.asList(featuresPixelOthers).contains(name)) return true;
@@ -130,10 +132,10 @@ index 44cbcd62bcb6..2fa3a7ecb7dd 100644
      }
  
 diff --git a/core/java/android/provider/Settings.java b/core/java/android/provider/Settings.java
-index fc2c416343c0..719fa719a420 100644
+index 954fdd62abeb..b15049f40c4b 100644
 --- a/core/java/android/provider/Settings.java
 +++ b/core/java/android/provider/Settings.java
-@@ -12088,12 +12088,6 @@ public final class Settings {
+@@ -12115,12 +12115,6 @@ public final class Settings {
           */
          public static final String SHOW_CLIPBOARD_OVERLAY = "show_clipboard_overlay";
  
@@ -148,10 +150,10 @@ index fc2c416343c0..719fa719a420 100644
           * @hide
 diff --git a/core/java/com/android/internal/util/crdroid/PixelPropsUtils.java b/core/java/com/android/internal/util/crdroid/PixelPropsUtils.java
 deleted file mode 100644
-index a709985d1a2d..000000000000
+index fb087c38bd1c..000000000000
 --- a/core/java/com/android/internal/util/crdroid/PixelPropsUtils.java
 +++ /dev/null
-@@ -1,431 +0,0 @@
+@@ -1,436 +0,0 @@
 -/*
 - * Copyright (C) 2020 The Pixel Experience Project
 - *               2021-2024 crDroid Android Project
@@ -211,35 +213,43 @@ index a709985d1a2d..000000000000
 -
 -    // Packages to Spoof as Pixel 8 Pro
 -    private static final String[] packagesToChangePixel8Pro = {
--            "com.android.chrome",
--            "com.android.vending",
+-            "com.google.android.apps.aiwallpapers",
+-            "com.google.android.apps.bard",
 -            "com.google.android.apps.customization.pixel",
 -            "com.google.android.apps.emojiwallpaper",
+-            "com.google.android.apps.nexuslauncher",
 -            "com.google.android.apps.privacy.wildlife",
 -            "com.google.android.apps.wallpaper",
 -            "com.google.android.apps.wallpaper.pixel",
+-            "com.google.android.gms",
 -            "com.google.android.googlequicksearchbox",
 -            "com.google.android.wallpaper.effects",
--            "com.google.pixel.livewallpaper",
--            "com.nhs.online.nhsonline",
--            "com.netflix.mediaclient"
+-            "com.google.pixel.livewallpaper"
 -    };
 -
 -    // Packages to Spoof as Pixel 5a
 -    private static final String[] packagesToChangePixel5a = {
--            "com.google.android.tts",
--            "com.breel.wallpapers20"
+-            "com.android.chrome",
+-            "com.breel.wallpapers20",
+-            "com.nhs.online.nhsonline",
+-            "com.netflix.mediaclient"
 -    };
 -
 -    // Packages to Keep with original device
 -    private static final String[] packagesToKeep = {
+-            "com.google.android.MTCL83",
+-            "com.google.android.UltraCVM",
+-            "com.google.android.apps.cameralite",
+-            "com.google.android.apps.dreamlinerupdater",
+-            "com.google.android.apps.dreamliner",
+-            "com.google.android.apps.miphone.aiai.AiaiApplication",
 -            "com.google.android.apps.motionsense.bridge",
--            "com.google.android.apps.nexuslauncher",
 -            "com.google.android.apps.pixelmigrate",
 -            "com.google.android.apps.recorder",
 -            "com.google.android.apps.restore",
 -            "com.google.android.apps.subscriptions.red",
 -            "com.google.android.apps.tachyon",
+-            "com.google.android.apps.tips",
 -            "com.google.android.apps.tycho",
 -            "com.google.android.apps.wearables.maestro.companion",
 -            "com.google.android.apps.youtube.kids",
@@ -323,7 +333,6 @@ index a709985d1a2d..000000000000
 -            "com.proximabeta.mf.uamo"
 -    };
 -
--    private static volatile boolean sIsGms = false;
 -    private static volatile boolean sIsFinsky = false;
 -    private static volatile boolean sIsExcluded = false;
 -
@@ -340,8 +349,8 @@ index a709985d1a2d..000000000000
 -        propsToChangePixel8Pro.put("PRODUCT", "husky");
 -        propsToChangePixel8Pro.put("HARDWARE", "husky");
 -        propsToChangePixel8Pro.put("MODEL", "Pixel 8 Pro");
--        propsToChangePixel8Pro.put("ID", "AP1A.240305.019.A1");
--        propsToChangePixel8Pro.put("FINGERPRINT", "google/husky/husky:14/AP1A.240305.019.A1/11445699:user/release-keys");
+-        propsToChangePixel8Pro.put("ID", "AP2A.240705.005.A1");
+-        propsToChangePixel8Pro.put("FINGERPRINT", "google/husky/husky:14/AP2A.240705.005.A1/11944170:user/release-keys");
 -        propsToChangePixel5a = new HashMap<>();
 -        propsToChangePixel5a.put("BRAND", "google");
 -        propsToChangePixel5a.put("MANUFACTURER", "Google");
@@ -349,8 +358,8 @@ index a709985d1a2d..000000000000
 -        propsToChangePixel5a.put("PRODUCT", "barbet");
 -        propsToChangePixel5a.put("HARDWARE", "barbet");
 -        propsToChangePixel5a.put("MODEL", "Pixel 5a");
--        propsToChangePixel5a.put("ID", "AP1A.240305.019.A1");
--        propsToChangePixel5a.put("FINGERPRINT", "google/barbet/barbet:14/AP1A.240305.019.A1/11445699:user/release-keys");
+-        propsToChangePixel5a.put("ID", "AP2A.240705.004");
+-        propsToChangePixel5a.put("FINGERPRINT", "google/barbet/barbet:14/AP2A.240705.004/11875680:user/release-keys");
 -        propsToChangePixelXL = new HashMap<>();
 -        propsToChangePixelXL.put("BRAND", "google");
 -        propsToChangePixelXL.put("MANUFACTURER", "Google");
@@ -414,8 +423,6 @@ index a709985d1a2d..000000000000
 -            if (packageName.equals("com.google.android.apps.photos")) {
 -                if (SystemProperties.getBoolean(SPOOF_PIXEL_GPHOTOS, true)) {
 -                    propsToChange.putAll(propsToChangePixelXL);
--                } else {
--                    propsToChange.putAll(propsToChangePixel5a);
 -                }
 -            } else if (packageName.equals("com.netflix.mediaclient") && 
 -                        !SystemProperties.getBoolean(SPOOF_PIXEL_NETFLIX, false)) {
@@ -448,7 +455,6 @@ index a709985d1a2d..000000000000
 -                final String processName = Application.getProcessName();
 -                if (processName.toLowerCase().contains("unstable")
 -                    || processName.toLowerCase().contains("instrumentation")) {
--                    sIsGms = true;
 -                    spoofBuildGms();
 -                }
 -                return;
@@ -560,25 +566,26 @@ index a709985d1a2d..000000000000
 -
 -    private static void spoofBuildGms() {
 -        // Alter build parameters to avoid hardware attestation enforcement
--        setPropValue("BRAND", "motorola");
--        setPropValue("MANUFACTURER", "motorola");
--        setPropValue("DEVICE", "griffin");
--        setPropValue("ID", "MCC24.246-37");
--        setPropValue("FINGERPRINT", "motorola/griffin_retcn/griffin:6.0.1/MCC24.246-37/42:user/release-keys");
--        setPropValue("MODEL", "XT1650-05");
--        setPropValue("PRODUCT", "griffin_retcn");
--        setVersionFieldString("SECURITY_PATCH", "2016-07-01");
+-        setPropValue("BRAND", "google");
+-        setPropValue("MANUFACTURER", "Google");
+-        setPropValue("DEVICE", "sailfish");
+-        setPropValue("ID", "OPM1.171019.011");
+-        setPropValue("FINGERPRINT", "google/sailfish/sailfish:8.1.0/OPM1.171019.011/4448085:user/release-keys");
+-        setPropValue("MODEL", "Pixel");
+-        setPropValue("PRODUCT", "sailfish");
+-        setVersionFieldString("SECURITY_PATCH", "2017-12-05");
 -    }
 -
 -    private static boolean isCallerSafetyNet() {
--        return sIsGms && Arrays.stream(Thread.currentThread().getStackTrace())
--                .anyMatch(elem -> elem.getClassName().contains("DroidGuard"));
+-        return Arrays.stream(Thread.currentThread().getStackTrace())
+-                        .anyMatch(elem -> elem.getClassName().toLowerCase()
+-                            .contains("droidguard"));
 -    }
 -
 -    public static void onEngineGetCertificateChain() {
 -        // Check stack for SafetyNet or Play Integrity
 -        if ((isCallerSafetyNet() || sIsFinsky) && !sIsExcluded) {
--            Log.i(TAG, "Blocked key attestation sIsGms=" + sIsGms + " sIsFinsky=" + sIsFinsky);
+-            Log.i(TAG, "Blocked key attestation");
 -            throw new UnsupportedOperationException();
 -        }
 -    }
@@ -2432,7 +2439,7 @@ index 53b807e9e380..524ccb1c12ba 100644
      <string name="face_icon_content_description" msgid="465030547475916280">"Isithonjana sobuso"</string>
      <string name="permlab_readSyncSettings" msgid="6250532864893156277">"funda izilungiselelo zokuvumelanisa"</string>
 diff --git a/core/res/res/values/cr_config.xml b/core/res/res/values/cr_config.xml
-index 45cd5dba3098..fac25bc76c85 100644
+index 697da3bf856e..00ba3c85e465 100644
 --- a/core/res/res/values/cr_config.xml
 +++ b/core/res/res/values/cr_config.xml
 @@ -90,14 +90,6 @@
@@ -2451,10 +2458,10 @@ index 45cd5dba3098..fac25bc76c85 100644
         from using specific sensors in order to stop battery drain -->
      <string-array name="config_blockPackagesSensorDrain">
 diff --git a/core/res/res/values/cr_strings.xml b/core/res/res/values/cr_strings.xml
-index 034964cec5f3..7c8d0d68eb21 100644
+index 8330b6e74b60..8ee2614177ca 100644
 --- a/core/res/res/values/cr_strings.xml
 +++ b/core/res/res/values/cr_strings.xml
-@@ -46,9 +46,6 @@
+@@ -30,9 +30,6 @@
      <string name="url_copy_success">URL copied successfully</string>
      <string name="url_copy_failed">An error occured while uploading the log to Pasty</string>
  
@@ -2465,7 +2472,7 @@ index 034964cec5f3..7c8d0d68eb21 100644
      <string name="parallel_space_badge_label" translatable="false">%1$s</string>
  
 diff --git a/core/res/res/values/cr_symbols.xml b/core/res/res/values/cr_symbols.xml
-index a3936d175499..327edfba2937 100644
+index 4473a9d0c13d..0e0137dad121 100644
 --- a/core/res/res/values/cr_symbols.xml
 +++ b/core/res/res/values/cr_symbols.xml
 @@ -93,9 +93,6 @@
@@ -2543,7 +2550,7 @@ index 78e4896bfefa..000000000000
 -
 -</vector>
 diff --git a/packages/SystemUI/res/values/cr_strings.xml b/packages/SystemUI/res/values/cr_strings.xml
-index e21ac21a0be5..e6b6248a5139 100644
+index 4b5d34820f7c..8e8e001bb4af 100644
 --- a/packages/SystemUI/res/values/cr_strings.xml
 +++ b/packages/SystemUI/res/values/cr_strings.xml
 @@ -146,9 +146,6 @@
